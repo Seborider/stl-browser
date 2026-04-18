@@ -1,5 +1,3 @@
-import type { FileFormat } from "../mocks/fixtures";
-
 const UNITS = ["B", "KB", "MB", "GB"] as const;
 
 export function formatBytes(bytes: number): string {
@@ -30,14 +28,21 @@ export function formatMm(mm: number): string {
   return `${mm.toFixed(1)} mm`;
 }
 
-export const FORMAT_COLORS: Record<FileFormat, string> = {
+// Known 3D file extensions get a distinctive tile color; anything else
+// falls back to neutral. The mapping is deliberately small — it grows
+// when the Phase 3 scanner learns new extensions.
+const FORMAT_COLOR_MAP: Record<string, string> = {
   stl: "#8b5cf6",
   "3mf": "#22d3ee",
   obj: "#f59e0b",
 };
 
-export const FORMAT_LABELS: Record<FileFormat, string> = {
-  stl: "STL",
-  "3mf": "3MF",
-  obj: "OBJ",
-};
+const UNKNOWN_COLOR = "#52525b";
+
+export function formatColor(extension: string): string {
+  return FORMAT_COLOR_MAP[extension.toLowerCase()] ?? UNKNOWN_COLOR;
+}
+
+export function formatLabel(extension: string): string {
+  return extension.toUpperCase();
+}

@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { SortKey, SortDirection } from "../generated";
 
-export type SortKey = "name" | "size" | "mtime" | "format";
-export type SortDirection = "asc" | "desc";
+export type { SortKey, SortDirection };
 export type GridSize = "sm" | "md" | "lg" | "xl";
 
 export interface PaneWidths {
@@ -11,16 +11,16 @@ export interface PaneWidths {
 }
 
 interface AppState {
-  activeLibraryId: string | null;
-  selectedFileId: string | null;
+  activeLibraryId: number | null;
+  selectedFileId: number | null;
   sortKey: SortKey;
   sortDirection: SortDirection;
   search: string;
   gridSize: GridSize;
   paneWidths: PaneWidths;
 
-  setActiveLibrary: (id: string | null) => void;
-  setSelectedFile: (id: string | null) => void;
+  setActiveLibrary: (id: number | null) => void;
+  setSelectedFile: (id: number | null) => void;
   setSort: (key: SortKey, direction?: SortDirection) => void;
   toggleSortDirection: () => void;
   setSearch: (q: string) => void;
@@ -59,7 +59,9 @@ export const useAppStore = create<AppState>()(
         set((s) => ({ paneWidths: { ...s.paneWidths, [pane]: width } })),
     }),
     {
-      name: "stl-browser:view",
+      // Bumped name suffix (`:v2`) so the pre-Phase-2 persisted state (which
+      // used string ids) doesn't rehydrate into the new `number | null` schema.
+      name: "stl-browser:view:v2",
       partialize: (s) => ({
         sortKey: s.sortKey,
         sortDirection: s.sortDirection,

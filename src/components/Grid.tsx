@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { VirtuosoGrid, type VirtuosoGridHandle } from "react-virtuoso";
-import type { MockFile } from "../mocks/fixtures";
+import type { FileEntry } from "../generated";
 import { useAppStore, type GridSize } from "../state/store";
 import { GridTile } from "./GridTile";
 
@@ -15,7 +15,7 @@ const GRID_GAP_PX = 8;
 const GRID_PAD_PX = 12;
 
 interface Props {
-  files: MockFile[];
+  files: FileEntry[];
   virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
   onColumnsChange: (columns: number) => void;
   onRangeChanged: (range: { startIndex: number; endIndex: number }) => void;
@@ -121,8 +121,8 @@ export function Grid({
 
 function EmptyState() {
   return (
-    <div className="flex h-full items-center justify-center text-sm text-neutral-500">
-      No files match this view.
+    <div className="flex h-full items-center justify-center p-8 text-center text-sm text-neutral-500">
+      No files yet. Add a library folder to get started — scanning lands in Phase 3.
     </div>
   );
 }

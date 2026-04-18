@@ -1,9 +1,9 @@
 import { memo } from "react";
-import type { MockFile } from "../mocks/fixtures";
-import { FORMAT_COLORS, FORMAT_LABELS } from "../lib/format";
+import type { FileEntry } from "../generated";
+import { formatColor, formatLabel } from "../lib/format";
 
 interface Props {
-  file: MockFile;
+  file: FileEntry;
   selected: boolean;
   onSelect: () => void;
   onActivate: () => void;
@@ -26,10 +26,10 @@ function GridTileInner({ file, selected, onSelect, onActivate }: Props) {
           "relative aspect-square w-full overflow-hidden rounded-md ring-1 ring-inset " +
           (selected ? "ring-indigo-400" : "ring-neutral-800")
         }
-        style={{ backgroundColor: FORMAT_COLORS[file.format] }}
+        style={{ backgroundColor: formatColor(file.extension) }}
       >
         <span className="absolute left-1.5 top-1.5 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-white/90">
-          {FORMAT_LABELS[file.format]}
+          {formatLabel(file.extension)}
         </span>
       </div>
       <div

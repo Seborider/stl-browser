@@ -9,6 +9,7 @@ import { GridSizeSlider } from "./components/GridSizeSlider";
 import { SearchBox } from "./components/SearchBox";
 import { useAppStore } from "./state/store";
 import { useVisibleFiles } from "./hooks/useVisibleFiles";
+import { useLibraries } from "./hooks/useLibraries";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { clamp } from "./hooks/useResizablePanes";
 import "./App.css";
@@ -24,8 +25,12 @@ function App() {
   const selectedFileId = useAppStore((s) => s.selectedFileId);
 
   const files = useVisibleFiles();
+  const { libraries } = useLibraries();
   const selectedFile = useMemo(
-    () => (selectedFileId ? files.find((f) => f.id === selectedFileId) ?? null : null),
+    () =>
+      selectedFileId !== null
+        ? files.find((f) => f.id === selectedFileId) ?? null
+        : null,
     [files, selectedFileId],
   );
 
@@ -97,7 +102,7 @@ function App() {
         className="shrink-0"
         style={{ width: paneWidths.inspector }}
       >
-        <Inspector ref={inspectorRef} file={selectedFile} />
+        <Inspector ref={inspectorRef} file={selectedFile} libraries={libraries} />
       </div>
     </div>
   );

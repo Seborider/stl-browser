@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
-import type { MockFile } from "../mocks/fixtures";
+import type { FileEntry } from "../generated";
 import { useAppStore } from "../state/store";
 
 interface Params {
-  files: MockFile[];
+  files: FileEntry[];
   columns: number;
   focusInspector: () => void;
   scrollToIndex: (index: number) => void;
@@ -62,7 +62,7 @@ export function useKeyboardNav({
 
       if (files.length === 0) return;
 
-      const currentIndex = selectedFileId
+      const currentIndex = selectedFileId !== null
         ? files.findIndex((f) => f.id === selectedFileId)
         : -1;
 

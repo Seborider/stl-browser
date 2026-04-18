@@ -1,0 +1,62 @@
+use serde::{Deserialize, Serialize};
+use ts_rs::TS;
+
+// ts-rs defaults i64 → `bigint` in TS, but Tauri's IPC serializes i64 as a
+// regular JSON number (safe up to 2^53, which is fine for auto-increment ids
+// and unix-millis timestamps). Force `number` with `#[ts(type = "number")]`.
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct Library {
+    #[ts(type = "number")]
+    pub id: i64,
+    pub path: String,
+    pub name: String,
+    #[ts(type = "number")]
+    pub added_at: i64, // unix millis
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct FileEntry {
+    #[ts(type = "number")]
+    pub id: i64,
+    #[ts(type = "number")]
+    pub library_id: i64,
+    pub rel_path: String,
+    pub name: String,
+    pub extension: String,
+    #[ts(type = "number")]
+    pub size_bytes: i64,
+    #[ts(type = "number")]
+    pub mtime_ms: i64,
+    pub cache_key: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "lowercase")]
+pub enum SortKey {
+    Name,
+    Size,
+    Mtime,
+    Format,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "lowercase")]
+pub enum SortDirection {
+    Asc,
+    Desc,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct Sort {
+    pub key: SortKey,
+    pub direction: SortDirection,
+}

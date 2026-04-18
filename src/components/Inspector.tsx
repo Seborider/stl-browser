@@ -1,21 +1,14 @@
 import { forwardRef } from "react";
-import type { MockFile } from "../mocks/fixtures";
-import { mockLibraries } from "../mocks/fixtures";
-import {
-  FORMAT_COLORS,
-  FORMAT_LABELS,
-  formatBytes,
-  formatDate,
-  formatMm,
-  formatNumber,
-} from "../lib/format";
+import type { FileEntry, Library } from "../generated";
+import { formatBytes, formatColor, formatDate, formatLabel } from "../lib/format";
 
 interface Props {
-  file: MockFile | null;
+  file: FileEntry | null;
+  libraries: Library[];
 }
 
 export const Inspector = forwardRef<HTMLDivElement, Props>(function Inspector(
-  { file },
+  { file, libraries },
   ref,
 ) {
   return (
@@ -27,7 +20,7 @@ export const Inspector = forwardRef<HTMLDivElement, Props>(function Inspector(
       <div className="border-b border-neutral-800/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
         Inspector
       </div>
-      {file ? <Details file={file} /> : <EmptyState />}
+      {file ? <Details file={file} libraries={libraries} /> : <EmptyState />}
     </aside>
   );
 });
@@ -44,17 +37,17 @@ function EmptyState() {
   );
 }
 
-function Details({ file }: { file: MockFile }) {
-  const library = mockLibraries.find((l) => l.id === file.libraryId);
+function Details({ file, libraries }: { file: FileEntry; libraries: Library[] }) {
+  const library = libraries.find((l) => l.id === file.libraryId);
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
       <div
         className="flex h-32 w-full items-center justify-center rounded-lg ring-1 ring-inset ring-neutral-800"
-        style={{ backgroundColor: FORMAT_COLORS[file.format] }}
+        style={{ backgroundColor: formatColor(file.extension) }}
       >
         <span className="rounded bg-black/40 px-2 py-0.5 text-[11px] font-semibold tracking-wider text-white/90">
-          {FORMAT_LABELS[file.format]}
+          {formatLabel(file.extension)}
         </span>
       </div>
 
@@ -67,24 +60,17 @@ function Details({ file }: { file: MockFile }) {
         </div>
         <div
           className="mt-0.5 break-all text-[11px] text-neutral-500"
-          title={file.path}
+          title={file.relPath}
         >
-          {file.path}
+          {file.relPath}
         </div>
       </div>
 
       <dl className="flex flex-col gap-2 text-xs">
         <Row label="Library" value={library?.name ?? "—"} />
-        <Row label="Format" value={FORMAT_LABELS[file.format]} />
+        <Row label="Format" value={formatLabel(file.extension)} />
         <Row label="Size" value={formatBytes(file.sizeBytes)} />
         <Row label="Modified" value={formatDate(file.mtimeMs)} />
-        <Row label="Triangles" value={formatNumber(file.triangleCount)} />
-        <Row
-          label="Bounds"
-          value={`${formatMm(file.boundingBox.x)} · ${formatMm(
-            file.boundingBox.y,
-          )} · ${formatMm(file.boundingBox.z)}`}
-        />
       </dl>
     </div>
   );
