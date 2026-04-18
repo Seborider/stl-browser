@@ -1,0 +1,40 @@
+import { useEffect, useState } from "react";
+import { useAppStore } from "../state/store";
+
+const DEBOUNCE_MS = 150;
+
+export function SearchBox() {
+  const search = useAppStore((s) => s.search);
+  const setSearch = useAppStore((s) => s.setSearch);
+  const [value, setValue] = useState(search);
+
+  useEffect(() => {
+    if (value === search) return;
+    const id = window.setTimeout(() => setSearch(value), DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+  }, [value, search, setSearch]);
+
+  useEffect(() => {
+    if (search !== value) setValue(search);
+    // Only sync external changes (e.g. Escape clears selection but not search).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  return (
+    <div className="relative">
+      <input
+        type="search"
+        placeholder="Search files…"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="h-7 w-64 rounded-md border border-neutral-800 bg-neutral-900 pl-7 pr-2 text-xs text-neutral-100 outline-none placeholder:text-neutral-500 transition-colors hover:border-neutral-700 focus:border-indigo-500"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-neutral-500"
+      >
+        ⌕
+      </span>
+    </div>
+  );
+}
