@@ -11,6 +11,7 @@ import { useAppStore } from "./state/store";
 import { useVisibleFiles } from "./hooks/useVisibleFiles";
 import { useLibraries } from "./hooks/useLibraries";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
+import { useLiveEvents } from "./hooks/useLiveEvents";
 import { clamp } from "./hooks/useResizablePanes";
 import "./App.css";
 
@@ -23,6 +24,8 @@ function App() {
   const paneWidths = useAppStore((s) => s.paneWidths);
   const setPaneWidth = useAppStore((s) => s.setPaneWidth);
   const selectedFileId = useAppStore((s) => s.selectedFileId);
+
+  useLiveEvents();
 
   const files = useVisibleFiles();
   const { libraries } = useLibraries();

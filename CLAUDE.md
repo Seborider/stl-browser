@@ -56,7 +56,7 @@ Tauri UI changes cannot be observed from the agent side — after `pnpm tauri de
 
 ## Current phase
 
-Phase 2 (Rust data layer: SQLite, migrations, libraries CRUD, ts-rs bindings, folder picker) complete. Next: Phase 3 — scanning + metadata. See `PLAN.md` §2 for the full phased roadmap.
+Phase 3 (scanning + metadata: walkdir + blake3 cache keys, tokio-spawned walk + mesh parse, mesh_metadata schema, new IPC commands and namespaced events) complete. Next: Phase 4 — file watching. See `PLAN.md` §2 for the full phased roadmap.
 
 ### Bindings workflow
 ts-rs bindings regenerate via `pnpm bindings` (runs `cargo test --lib export_bindings_`), chained into `predev` and `prebuild` so `pnpm tauri dev` and `pnpm tauri build` regenerate automatically. Doing it from `build.rs` needs the workspace-split trick (separate types crate) to avoid cargo target-dir lock recursion; revisit if the pnpm chain becomes a problem.

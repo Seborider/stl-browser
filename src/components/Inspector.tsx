@@ -1,6 +1,8 @@
-import { forwardRef } from "react";
-import type { FileEntry, Library } from "../generated";
+import { forwardRef, useEffect, useState } from "react";
+import type { FileEntry, Library, MeshMetadata } from "../generated";
 import { formatBytes, formatColor, formatDate, formatLabel } from "../lib/format";
+import { getFileDetails } from "../ipc/commands";
+import { useFilesStore } from "../state/files";
 
 interface Props {
   file: FileEntry | null;
@@ -40,6 +42,25 @@ function EmptyState() {
 function Details({ file, libraries }: { file: FileEntry; libraries: Library[] }) {
   const library = libraries.find((l) => l.id === file.libraryId);
 
+  const metadataFromStore = useFilesStore((s) => s.metadataByFileId[file.id]);
+  const [fetched, setFetched] = useState<MeshMetadata | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getFileDetails(file.id)
+      .then((details) => {
+        if (!cancelled) setFetched(details.metadata ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setFetched(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [file.id]);
+
+  const metadata: MeshMetadata | null = metadataFromStore ?? fetched ?? null;
+
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
       <div
@@ -72,6 +93,41 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
         <Row label="Size" value={formatBytes(file.sizeBytes)} />
         <Row label="Modified" value={formatDate(file.mtimeMs)} />
       </dl>
+
+      {metadata && !metadata.parseError && metadata.bboxMin && metadata.bboxMax && (
+        <section className="space-y-1 border-t border-neutral-800 pt-3 text-[12px] text-neutral-300">
+          <div>
+            <span className="text-neutral-500">Triangles:</span>{" "}
+            {metadata.triangleCount?.toLocaleString() ?? "—"}
+          </div>
+          <div>
+            <span className="text-neutral-500">Size (mm):</span>{" "}
+            {(metadata.bboxMax[0] - metadata.bboxMin[0]).toFixed(1)} ×{" "}
+            {(metadata.bboxMax[1] - metadata.bboxMin[1]).toFixed(1)} ×{" "}
+            {(metadata.bboxMax[2] - metadata.bboxMin[2]).toFixed(1)}
+          </div>
+          <div>
+            <span className="text-neutral-500">Surface area:</span>{" "}
+            {metadata.surfaceAreaMm2?.toFixed(1) ?? "—"} mm²
+          </div>
+          <div>
+            <span className="text-neutral-500">Volume:</span>{" "}
+            {metadata.volumeMm3 != null
+              ? `${metadata.volumeMm3.toFixed(1)} mm³`
+              : "— (not watertight)"}
+          </div>
+        </section>
+      )}
+      {metadata?.parseError && (
+        <section className="border-t border-neutral-800 pt-3 text-[12px] text-red-400">
+          Parse failed: {metadata.parseError}
+        </section>
+      )}
+      {!metadata && (
+        <section className="border-t border-neutral-800 pt-3 text-[12px] text-neutral-500">
+          Parsing mesh…
+        </section>
+      )}
     </div>
   );
 }

@@ -59,8 +59,7 @@ export function Sidebar() {
           onClick={handleAdd}
           disabled={busy}
           className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 text-[11px] text-neutral-300 transition-colors hover:border-neutral-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          title="Add a library folder"
-        >
+          title="Add a library folder">
           + Add
         </button>
       </div>
@@ -82,19 +81,18 @@ export function Sidebar() {
         ))}
         {!loading && libraries.length === 0 && (
           <p className="px-3 py-2 text-[11px] text-neutral-500">
-            No libraries yet. Click <span className="text-neutral-300">+ Add</span> to pick a folder.
+            No libraries yet. Click{" "}
+            <span className="text-neutral-300">+ Add</span> to pick a folder.
           </p>
         )}
-        {error && (
-          <p className="px-3 py-2 text-[11px] text-red-400">{error}</p>
-        )}
+        {error && <p className="px-3 py-2 text-[11px] text-red-400">{error}</p>}
         {message && (
           <p className="px-3 py-2 text-[11px] text-amber-400">{message}</p>
         )}
       </nav>
 
       <div className="mt-auto border-t border-neutral-800/70 px-4 py-3 text-[11px] text-neutral-500">
-        Phase 2 · data layer
+        Phase 3 · Scanning + metadata
       </div>
     </aside>
   );
@@ -113,16 +111,14 @@ function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
       className={
         "group flex items-center rounded-md transition-colors " +
         (active ? "bg-indigo-500/15" : "hover:bg-neutral-800/70")
-      }
-    >
+      }>
       <button
         type="button"
         onClick={onClick}
         className={
           "min-w-0 flex-1 truncate px-3 py-1.5 text-left " +
           (active ? "text-indigo-200" : "text-neutral-300")
-        }
-      >
+        }>
         {label}
       </button>
       {onRemove && (
@@ -134,8 +130,7 @@ function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
           }}
           aria-label={`Remove ${label}`}
           title={`Remove ${label}`}
-          className="mr-1 rounded px-1.5 text-[13px] leading-none text-neutral-500 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
-        >
+          className="mr-1 rounded px-1.5 text-[13px] leading-none text-neutral-500 opacity-0 transition hover:text-red-400 group-hover:opacity-100">
           ×
         </button>
       )}

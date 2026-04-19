@@ -14,7 +14,7 @@ pub struct Library {
     pub path: String,
     pub name: String,
     #[ts(type = "number")]
-    pub added_at: i64, // unix millis
+    pub added_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -59,4 +59,92 @@ pub enum SortDirection {
 pub struct Sort {
     pub key: SortKey,
     pub direction: SortDirection,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct FileQuery {
+    #[ts(type = "number | null")]
+    pub library_id: Option<i64>,
+    pub sort: Sort,
+    pub search: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct MeshMetadata {
+    pub bbox_min: Option<[f64; 3]>,
+    pub bbox_max: Option<[f64; 3]>,
+    #[ts(type = "number | null")]
+    pub triangle_count: Option<i64>,
+    pub volume_mm3: Option<f64>,
+    pub surface_area_mm2: Option<f64>,
+    #[ts(type = "number")]
+    pub computed_at: i64,
+    pub parse_error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct FileDetails {
+    pub file: FileEntry,
+    pub metadata: Option<MeshMetadata>,
+}
+
+// ---- event payloads ----
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ScanStartedEvent {
+    #[ts(type = "number")]
+    pub library_id: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ScanProgressEvent {
+    #[ts(type = "number")]
+    pub library_id: i64,
+    #[ts(type = "number")]
+    pub scanned: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ScanCompletedEvent {
+    #[ts(type = "number")]
+    pub library_id: i64,
+    #[ts(type = "number")]
+    pub total: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ScanErrorEvent {
+    #[ts(type = "number")]
+    pub library_id: i64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct FilesAddedEvent {
+    pub files: Vec<FileEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct MetadataReadyEvent {
+    #[ts(type = "number")]
+    pub file_id: i64,
+    pub metadata: MeshMetadata,
 }

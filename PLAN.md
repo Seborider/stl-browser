@@ -159,6 +159,7 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
 - Insert `files` rows; emit `files:added` in batches of ~100.
 - Spawn a tokio task per library that parses mesh metadata (bbox, tri count, volume, area). Emit `metadata:ready` per file.
 - **Exit criterion:** add a real folder of STLs and see them appear in the grid with real metadata and no thumbnails.
+- **Phase 3 — Status: complete.**
 
 ### Phase 4 — File watching (1 day)
 - `notify-debouncer-full` wrapping `notify::RecommendedWatcher`.
@@ -282,13 +283,17 @@ CREATE INDEX idx_files_cache_key    ON files(cache_key);
 
 CREATE TABLE mesh_metadata (
   file_id         INTEGER PRIMARY KEY REFERENCES files(id) ON DELETE CASCADE,
-  bbox_min_x REAL NOT NULL, bbox_min_y REAL NOT NULL, bbox_min_z REAL NOT NULL,
-  bbox_max_x REAL NOT NULL, bbox_max_y REAL NOT NULL, bbox_max_z REAL NOT NULL,
-  volume_mm3      REAL,                    -- nullable: watertightness not guaranteed
+  bbox_min_x REAL, bbox_min_y REAL, bbox_min_z REAL,    -- nullable on parse_error rows
+  bbox_max_x REAL, bbox_max_y REAL, bbox_max_z REAL,    -- "
+  volume_mm3      REAL,                    -- nullable: Some only when edge-watertight
   surface_area_mm2 REAL,
-  triangle_count  INTEGER NOT NULL,
+  triangle_count  INTEGER,                 -- nullable on parse_error rows
   computed_at     INTEGER NOT NULL,
-  parse_error     TEXT                    -- non-null if parse failed; row still exists so we don't retry
+  parse_error     TEXT,                    -- non-null if parse failed; row still exists so we don't retry
+  CHECK (parse_error IS NOT NULL
+         OR (bbox_min_x IS NOT NULL AND bbox_min_y IS NOT NULL AND bbox_min_z IS NOT NULL
+             AND bbox_max_x IS NOT NULL AND bbox_max_y IS NOT NULL AND bbox_max_z IS NOT NULL
+             AND triangle_count IS NOT NULL))
 );
 
 CREATE TABLE thumbnails (
@@ -310,6 +315,7 @@ CREATE TABLE schema_version (version INTEGER PRIMARY KEY);
 **Design notes**
 - **Thumbnails keyed by `cache_key`, not `file_id`** — if two identical files exist across libraries, the thumbnail dedupes. The PNG itself lives at `<cache_dir>/thumbnails/<cache_key>.png`. A periodic GC sweep removes PNGs without a matching `cache_key` in `files`.
 - **`parse_error` stored in `mesh_metadata`** — lets us avoid re-parsing broken files every launch. If the file's mtime changes the row gets replaced.
+- **bbox_* and triangle_count nullable** — a file with a `parse_error` has no geometry. A CHECK constraint enforces "either parse_error OR full geometry", so non-null geometry always round-trips through `get_file_details`.
 - **`rel_path` instead of absolute** — moving a library on disk only requires updating `libraries.path`.
 - **`COLLATE NOCASE` on name index** — case-insensitive sort matches Finder's default.
 - **WAL mode** — concurrent scanner writes + UI reads without blocking.
@@ -419,6 +425,8 @@ If the queue explodes (e.g. a 50k-file library just got added), cap enqueued job
 | `anyhow` | `1` | Internal error plumbing where exact type doesn't matter. |
 | `ts-rs` | `7`, `features = ["serde-compat"]` | Generates TS types from Rust structs at build time. |
 | `parking_lot` | `0.12` | Faster `Mutex` than std; used where lock hold is short. |
+
+**Concurrency cap:** `std::thread::available_parallelism()` is used in `scan/mod.rs` (capped at 4). `num_cpus` was considered but skipped to avoid an extra dep when `std` gives the same answer.
 
 ### Frontend (`package.json`)
 

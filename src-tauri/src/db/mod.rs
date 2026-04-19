@@ -4,7 +4,9 @@ use rusqlite::Connection;
 
 use crate::error::IpcError;
 
+pub mod files;
 pub mod libraries;
+pub mod mesh;
 pub mod migrations;
 
 // Opens (or creates) the SQLite file, enables sensible pragmas, and applies

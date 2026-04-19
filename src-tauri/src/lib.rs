@@ -1,6 +1,9 @@
 mod db;
 mod error;
+mod events;
 mod ipc;
+mod mesh;
+mod scan;
 mod state;
 mod types;
 
@@ -28,6 +31,8 @@ pub fn run() {
             ipc::libraries::add_library,
             ipc::libraries::remove_library,
             ipc::files::list_files,
+            ipc::files::get_file_details,
+            ipc::files::rescan_library,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

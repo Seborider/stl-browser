@@ -23,3 +23,10 @@ serde_json = "1"
 rusqlite = { version = "0.31", features = ["bundled"] }
 thiserror = "1"
 ts-rs = { version = "7", features = ["serde-compat"] }
+tokio = { version = "1", features = ["full"] }
+walkdir = "2"
+blake3 = "1"
+stl_io = "0.7"
+tobj = "4"
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+quick-xml = "0.31"
