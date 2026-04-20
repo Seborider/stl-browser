@@ -143,6 +143,21 @@ pub struct FilesAddedEvent {
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]
 #[serde(rename_all = "camelCase")]
+pub struct FilesRemovedEvent {
+    #[ts(type = "number[]")]
+    pub file_ids: Vec<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct FilesUpdatedEvent {
+    pub files: Vec<FileEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
 pub struct MetadataReadyEvent {
     #[ts(type = "number")]
     pub file_id: i64,

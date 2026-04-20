@@ -166,6 +166,7 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
 - On event: diff against DB, emit `files:added` / `files:removed` / `files:updated`.
 - Re-scan metadata for updated files.
 - **Exit criterion:** dropping a new STL into a watched folder makes it appear within ~1s.
+- **Phase 4 — Status: complete.**
 
 ### Phase 5 — Thumbnail pipeline (3–5 days — THE RISKY PART)
 - **Do the three spikes in §7 first.** Merge them into `src-tauri/` and `src/thumbs/` only once proven.

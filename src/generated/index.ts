@@ -6,6 +6,8 @@ export type { FileDetails } from "./FileDetails";
 export type { FileEntry } from "./FileEntry";
 export type { FileQuery } from "./FileQuery";
 export type { FilesAddedEvent } from "./FilesAddedEvent";
+export type { FilesRemovedEvent } from "./FilesRemovedEvent";
+export type { FilesUpdatedEvent } from "./FilesUpdatedEvent";
 export type { IpcError } from "./IpcError";
 export type { Library } from "./Library";
 export type { MeshMetadata } from "./MeshMetadata";

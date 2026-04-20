@@ -7,6 +7,9 @@ mod scan;
 mod state;
 mod types;
 
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use tauri::Manager;
 
 use crate::state::AppState;
@@ -23,7 +26,37 @@ pub fn run() {
             std::fs::create_dir_all(&app_data)?;
             let db_path = app_data.join("library.db");
             let conn = db::open(&db_path)?;
-            app.manage(AppState::new(conn));
+            let state = AppState::new(conn);
+            app.manage(Arc::clone(&state));
+
+            // Start a watcher for every library already present in the DB.
+            // A missing or unreadable path surfaces via scan:error but does
+            // not block startup.
+            let libraries = {
+                let conn = state
+                    .db
+                    .lock()
+                    .map_err(|e| format!("db mutex poisoned: {e}"))?;
+                db::libraries::list(&conn).map_err(|e| e.to_string())?
+            };
+            let handle = app.handle();
+            for lib in libraries {
+                match scan::watcher::start(
+                    handle.clone(),
+                    Arc::clone(&state),
+                    lib.id,
+                    PathBuf::from(&lib.path),
+                ) {
+                    Ok(w) => {
+                        if let Ok(mut map) = state.watchers.lock() {
+                            map.insert(lib.id, w);
+                        }
+                    }
+                    Err(e) => {
+                        events::scan_error(handle, lib.id, format!("watcher start: {e}"));
+                    }
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use rusqlite::{params, Connection, ToSql};
 
 use crate::error::IpcError;
@@ -23,6 +25,13 @@ pub struct NeedsMetadata {
     pub id: i64,
     pub abs_path: String, // library.path + "/" + rel_path
     pub extension: String,
+}
+
+// Slim view of a file row used by the watcher diff classifier.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExistingFile {
+    pub id: i64,
+    pub cache_key: String,
 }
 
 pub fn insert_files_batch(
@@ -149,6 +158,83 @@ pub fn get_by_id(conn: &Connection, id: i64) -> Result<FileEntry, IpcError> {
     })
 }
 
+/// Look up the existing (id, cache_key) for a set of rel_paths in one library.
+/// Used by the watcher to diff a debounced batch against current DB state.
+pub fn list_by_rel_paths(
+    conn: &Connection,
+    library_id: i64,
+    rel_paths: &[String],
+) -> Result<HashMap<String, ExistingFile>, IpcError> {
+    let mut out: HashMap<String, ExistingFile> = HashMap::new();
+    if rel_paths.is_empty() {
+        return Ok(out);
+    }
+    let placeholders = vec!["?"; rel_paths.len()].join(",");
+    let sql = format!(
+        "SELECT id, rel_path, cache_key FROM files\n\
+         WHERE library_id = ? AND rel_path IN ({placeholders})"
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let mut args: Vec<Box<dyn ToSql>> = Vec::with_capacity(rel_paths.len() + 1);
+    args.push(Box::new(library_id));
+    for r in rel_paths {
+        args.push(Box::new(r.clone()));
+    }
+    let param_refs: Vec<&dyn ToSql> = args.iter().map(|b| b.as_ref()).collect();
+    let mut rows = stmt.query(rusqlite::params_from_iter(param_refs.iter()))?;
+    while let Some(row) = rows.next()? {
+        let id: i64 = row.get(0)?;
+        let rel: String = row.get(1)?;
+        let cache_key: String = row.get(2)?;
+        out.insert(rel, ExistingFile { id, cache_key });
+    }
+    Ok(out)
+}
+
+/// Delete a set of files by id. CASCADE removes the dependent mesh_metadata.
+pub fn delete_by_ids(conn: &Connection, ids: &[i64]) -> Result<usize, IpcError> {
+    if ids.is_empty() {
+        return Ok(0);
+    }
+    let tx = conn.unchecked_transaction()?;
+    let mut total = 0usize;
+    {
+        let mut stmt = tx.prepare("DELETE FROM files WHERE id = ?1")?;
+        for id in ids {
+            total += stmt.execute(params![id])?;
+        }
+    }
+    tx.commit()?;
+    Ok(total)
+}
+
+/// Apply a content change to a known file row: new cache_key / mtime / size
+/// (rel_path and name are expected to be unchanged for an in-place modify).
+/// Returns the refreshed FileEntry so the caller can emit it.
+pub fn update_file_row(
+    conn: &Connection,
+    id: i64,
+    row: &FileRow,
+) -> Result<FileEntry, IpcError> {
+    conn.execute(
+        "UPDATE files SET\n\
+           rel_path = ?2, name = ?3, extension = ?4,\n\
+           size_bytes = ?5, mtime_ms = ?6, scanned_at = ?7, cache_key = ?8\n\
+         WHERE id = ?1",
+        params![
+            id,
+            row.rel_path,
+            row.name,
+            row.extension,
+            row.size_bytes,
+            row.mtime_ms,
+            row.scanned_at,
+            row.cache_key,
+        ],
+    )?;
+    get_by_id(conn, id)
+}
+
 pub fn list_needing_metadata(
     conn: &Connection,
     library_id: i64,
@@ -254,6 +340,59 @@ mod tests {
         let r = list_files(&conn, &q(Some(1), SortKey::Size, "")).unwrap();
         let order: Vec<&str> = r.iter().map(|f| f.name.as_str()).collect();
         assert_eq!(order, vec!["banana.obj", "cherry.3mf", "Apple.stl"]);
+    }
+
+    #[test]
+    fn list_by_rel_paths_maps_existing_only() {
+        let conn = setup();
+        let inserted = insert_files_batch(
+            &conn,
+            &[row("a", "stl", 10, "ka"), row("b", "obj", 20, "kb")],
+        )
+        .unwrap();
+        let map = list_by_rel_paths(
+            &conn,
+            1,
+            &vec![
+                inserted[0].rel_path.clone(),
+                inserted[1].rel_path.clone(),
+                "missing/x.stl".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(map.len(), 2);
+        assert_eq!(map[&inserted[0].rel_path].cache_key, "ka");
+        assert_eq!(map[&inserted[1].rel_path].id, inserted[1].id);
+    }
+
+    #[test]
+    fn delete_by_ids_cascades_and_counts() {
+        let conn = setup();
+        let inserted = insert_files_batch(
+            &conn,
+            &[row("a", "stl", 10, "ka"), row("b", "obj", 20, "kb")],
+        )
+        .unwrap();
+        let n = delete_by_ids(&conn, &vec![inserted[0].id, 999_999]).unwrap();
+        assert_eq!(n, 1);
+        let still = list_files(&conn, &q(Some(1), SortKey::Name, "")).unwrap();
+        assert_eq!(still.len(), 1);
+        assert_eq!(still[0].id, inserted[1].id);
+    }
+
+    #[test]
+    fn update_file_row_replaces_cache_key_and_returns_entry() {
+        let conn = setup();
+        let inserted = insert_files_batch(&conn, &[row("a", "stl", 10, "ka")]).unwrap();
+        let original = &inserted[0];
+
+        let mut new_row = row("a", "stl", 42, "ka_new");
+        new_row.mtime_ms = 999;
+        let refreshed = update_file_row(&conn, original.id, &new_row).unwrap();
+        assert_eq!(refreshed.id, original.id);
+        assert_eq!(refreshed.cache_key, "ka_new");
+        assert_eq!(refreshed.size_bytes, 42);
+        assert_eq!(refreshed.mtime_ms, 999);
     }
 
     #[test]

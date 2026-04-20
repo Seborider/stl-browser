@@ -30,3 +30,5 @@ stl_io = "0.7"
 tobj = "4"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 quick-xml = "0.31"
+notify = "6"
+notify-debouncer-full = "0.3"

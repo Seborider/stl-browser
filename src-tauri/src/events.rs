@@ -1,8 +1,8 @@
 use tauri::{AppHandle, Emitter};
 
 use crate::types::{
-    FilesAddedEvent, MetadataReadyEvent, ScanCompletedEvent, ScanErrorEvent,
-    ScanProgressEvent, ScanStartedEvent,
+    FilesAddedEvent, FilesRemovedEvent, FilesUpdatedEvent, MetadataReadyEvent,
+    ScanCompletedEvent, ScanErrorEvent, ScanProgressEvent, ScanStartedEvent,
 };
 
 // Event names live here so no caller can accidentally typo "scan:strted".
@@ -11,6 +11,8 @@ pub const SCAN_PROGRESS: &str = "scan:progress";
 pub const SCAN_COMPLETED: &str = "scan:completed";
 pub const SCAN_ERROR: &str = "scan:error";
 pub const FILES_ADDED: &str = "files:added";
+pub const FILES_REMOVED: &str = "files:removed";
+pub const FILES_UPDATED: &str = "files:updated";
 pub const METADATA_READY: &str = "metadata:ready";
 
 // `Emitter` is Tauri 2's trait that puts `.emit` on AppHandle. Errors are
@@ -34,6 +36,14 @@ pub fn scan_error(app: &AppHandle, library_id: i64, message: String) {
 
 pub fn files_added(app: &AppHandle, files: Vec<crate::types::FileEntry>) {
     let _ = app.emit(FILES_ADDED, FilesAddedEvent { files });
+}
+
+pub fn files_removed(app: &AppHandle, file_ids: Vec<i64>) {
+    let _ = app.emit(FILES_REMOVED, FilesRemovedEvent { file_ids });
+}
+
+pub fn files_updated(app: &AppHandle, files: Vec<crate::types::FileEntry>) {
+    let _ = app.emit(FILES_UPDATED, FilesUpdatedEvent { files });
 }
 
 pub fn metadata_ready(app: &AppHandle, file_id: i64, metadata: crate::types::MeshMetadata) {

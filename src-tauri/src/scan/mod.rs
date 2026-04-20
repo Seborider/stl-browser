@@ -16,6 +16,39 @@ use crate::mesh;
 use crate::state::AppState;
 
 pub mod walker;
+pub mod watcher;
+
+/// Re-parse mesh metadata for a single file and emit `metadata:ready`.
+/// Used by Phase 3's scan stage 2 and by the Phase 4 watcher when a file's
+/// content changes. Silent on DB/parser failure because this is fire-and-forget.
+pub fn spawn_metadata_task(
+    app: AppHandle,
+    state: Arc<AppState>,
+    file_id: i64,
+    abs_path: String,
+    extension: String,
+) {
+    tauri::async_runtime::spawn(async move {
+        let computed_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0);
+        let outcome = spawn_blocking(move || mesh::parse_file(&abs_path, &extension))
+            .await
+            .unwrap_or_else(|e| Err(format!("parser task panicked: {e}")));
+        let stored = {
+            let conn = match state.db.lock() {
+                Ok(g) => g,
+                Err(_) => return,
+            };
+            match db::mesh::upsert_metadata(&conn, file_id, outcome, computed_at) {
+                Ok(m) => m,
+                Err(_) => return,
+            }
+        };
+        events::metadata_ready(&app, file_id, stored);
+    });
+}
 
 /// Kicks off a scan for `library_id`. Returns quickly; the actual walk +
 /// mesh-parse happen in tokio tasks that emit events.
