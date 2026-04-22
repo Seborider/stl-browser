@@ -1,0 +1,17 @@
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/deps/spike3_raw_ipc-c249699fcbc9a6d1.d: src/main.rs /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/092675ea3351d8106bd760a3bacf4674fc6f4c20a863351761cde85432c987d4 /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/c48520395bd7656d707aeb2bd96bf235b9e9fda0998cb3ffca2381a5663f13ae /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/87400d446c89e05d3232e1f76634baa98ff0d17d5b5a32799e7ac4a1d0e64a98 /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/index.html /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/e90fdd5a3c1a972318f72a39178ea9e3c266d09432e0a6dc281128103a498f47.html /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/main.js /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/a5938ae2816a551cc4d6d0a055e8d2b31176b0cd727d63e97fadc14d511af0cc.js
+
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/deps/spike3_raw_ipc-c249699fcbc9a6d1: src/main.rs /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/092675ea3351d8106bd760a3bacf4674fc6f4c20a863351761cde85432c987d4 /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/c48520395bd7656d707aeb2bd96bf235b9e9fda0998cb3ffca2381a5663f13ae /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/87400d446c89e05d3232e1f76634baa98ff0d17d5b5a32799e7ac4a1d0e64a98 /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/index.html /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/e90fdd5a3c1a972318f72a39178ea9e3c266d09432e0a6dc281128103a498f47.html /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/main.js /Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/a5938ae2816a551cc4d6d0a055e8d2b31176b0cd727d63e97fadc14d511af0cc.js
+
+src/main.rs:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/092675ea3351d8106bd760a3bacf4674fc6f4c20a863351761cde85432c987d4:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/c48520395bd7656d707aeb2bd96bf235b9e9fda0998cb3ffca2381a5663f13ae:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/87400d446c89e05d3232e1f76634baa98ff0d17d5b5a32799e7ac4a1d0e64a98:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/index.html:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/e90fdd5a3c1a972318f72a39178ea9e3c266d09432e0a6dc281128103a498f47.html:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/./dist/main.js:
+/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out/tauri-codegen-assets/a5938ae2816a551cc4d6d0a055e8d2b31176b0cd727d63e97fadc14d511af0cc.js:
+
+# env-dep:CARGO_PKG_AUTHORS=
+# env-dep:CARGO_PKG_DESCRIPTION=
+# env-dep:CARGO_PKG_NAME=spike3-raw-ipc
+# env-dep:OUT_DIR=/Users/sebo/dev/3dbrowser/spikes/spike3-raw-ipc/target/release/build/spike3-raw-ipc-3e698d007930938a/out

@@ -1,0 +1,5 @@
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/syn-ff639f8f8e133dcd/build_script_build-ff639f8f8e133dcd.d: /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-1.0.109/build.rs
+
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/syn-ff639f8f8e133dcd/build_script_build-ff639f8f8e133dcd: /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-1.0.109/build.rs
+
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-1.0.109/build.rs:

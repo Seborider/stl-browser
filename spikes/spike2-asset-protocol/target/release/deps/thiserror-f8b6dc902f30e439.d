@@ -1,0 +1,14 @@
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/deps/thiserror-f8b6dc902f30e439.d: /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/thiserror-6be2fd0f4fdb85ff/out/private.rs
+
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/deps/libthiserror-f8b6dc902f30e439.rlib: /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/thiserror-6be2fd0f4fdb85ff/out/private.rs
+
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/deps/libthiserror-f8b6dc902f30e439.rmeta: /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/thiserror-6be2fd0f4fdb85ff/out/private.rs
+
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/Users/sebo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/thiserror-6be2fd0f4fdb85ff/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/sebo/dev/3dbrowser/spikes/spike2-asset-protocol/target/release/build/thiserror-6be2fd0f4fdb85ff/out

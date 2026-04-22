@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spike 1 — OffscreenCanvas + three.js Worker</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #111;
+        color: #ddd;
+        max-width: 900px;
+      }
+      h1 { margin-top: 0; font-size: 18px; }
+      p { color: #aaa; }
+      .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+      button {
+        font: inherit;
+        padding: 8px 16px;
+        background: #2a2a2a;
+        color: #eee;
+        border: 1px solid #444;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover { background: #333; }
+      button:disabled { opacity: 0.5; cursor: wait; }
+      #results {
+        margin-top: 20px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      .row { padding: 6px 0; border-bottom: 1px solid #2a2a2a; }
+      .pass { color: #5de675; }
+      .fail { color: #ff6161; }
+      .thumb { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+      .thumb figure { margin: 0; }
+      .thumb figcaption { font-size: 11px; color: #888; padding-top: 4px; }
+      .thumb img {
+        width: 256px; height: 256px;
+        background: repeating-conic-gradient(#222 0 25%, #1a1a1a 0 50%) 50% / 16px 16px;
+        border: 1px solid #333;
+      }
+      code { background: #222; padding: 1px 6px; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <h1>Spike 1 — OffscreenCanvas + three.js Worker</h1>
+    <p>
+      Renders STL fixtures to 512×512 PNGs inside a single Web Worker using
+      <code>OffscreenCanvas</code>. Targets:
+      <strong>100k tris &lt; 300 ms</strong>,
+      <strong>1M tris &lt; 2000 ms</strong> (worker-side, message-in → bytes-out).
+    </p>
+    <p>
+      Generate fixtures first: <code>node gen-stl.mjs</code>, then serve this
+      directory over HTTP and open in Safari.
+    </p>
+
+    <div class="controls">
+      <button id="run-100k">Run 100k (3×)</button>
+      <button id="run-1m">Run 1M (3×)</button>
+      <button id="run-both">Run both</button>
+      <button id="clear">Clear</button>
+    </div>
+
+    <div id="results"></div>
+    <div class="thumb" id="thumbs"></div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
