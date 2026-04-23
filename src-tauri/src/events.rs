@@ -3,6 +3,7 @@ use tauri::{AppHandle, Emitter};
 use crate::types::{
     FilesAddedEvent, FilesRemovedEvent, FilesUpdatedEvent, MetadataReadyEvent,
     ScanCompletedEvent, ScanErrorEvent, ScanProgressEvent, ScanStartedEvent,
+    ThumbnailsNeededEvent, ThumbnailsNeededItem, ThumbnailsReadyEvent,
 };
 
 // Event names live here so no caller can accidentally typo "scan:strted".
@@ -14,6 +15,8 @@ pub const FILES_ADDED: &str = "files:added";
 pub const FILES_REMOVED: &str = "files:removed";
 pub const FILES_UPDATED: &str = "files:updated";
 pub const METADATA_READY: &str = "metadata:ready";
+pub const THUMBNAILS_NEEDED: &str = "thumbnails:needed";
+pub const THUMBNAILS_READY: &str = "thumbnails:ready";
 
 // `Emitter` is Tauri 2's trait that puts `.emit` on AppHandle. Errors are
 // logged and swallowed — emit failures mean the webview is gone, in which
@@ -48,4 +51,31 @@ pub fn files_updated(app: &AppHandle, files: Vec<crate::types::FileEntry>) {
 
 pub fn metadata_ready(app: &AppHandle, file_id: i64, metadata: crate::types::MeshMetadata) {
     let _ = app.emit(METADATA_READY, MetadataReadyEvent { file_id, metadata });
+}
+
+pub fn thumbnails_needed(app: &AppHandle, items: Vec<ThumbnailsNeededItem>) {
+    if items.is_empty() {
+        return;
+    }
+    let _ = app.emit(THUMBNAILS_NEEDED, ThumbnailsNeededEvent { items });
+}
+
+pub fn thumbnails_ready(
+    app: &AppHandle,
+    cache_key: String,
+    width: i64,
+    height: i64,
+    generated_at: i64,
+    file_ids: Vec<i64>,
+) {
+    let _ = app.emit(
+        THUMBNAILS_READY,
+        ThumbnailsReadyEvent {
+            cache_key,
+            width,
+            height,
+            generated_at,
+            file_ids,
+        },
+    );
 }

@@ -92,7 +92,7 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto border-t border-neutral-800/70 px-4 py-3 text-[11px] text-neutral-500">
-        Phase 4 · File watching
+        Phase 5 · Thumbnail pipeline
       </div>
     </aside>
   );

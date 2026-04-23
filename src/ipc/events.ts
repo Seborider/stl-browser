@@ -6,6 +6,8 @@ import type {
   ScanErrorEvent,
   ScanProgressEvent,
   ScanStartedEvent,
+  ThumbnailsNeededEvent,
+  ThumbnailsReadyEvent,
 } from "../generated";
 
 // Event names are duplicated from src-tauri/src/events.rs. If you change one,
@@ -16,6 +18,8 @@ export const SCAN_COMPLETED = "scan:completed";
 export const SCAN_ERROR = "scan:error";
 export const FILES_ADDED = "files:added";
 export const METADATA_READY = "metadata:ready";
+export const THUMBNAILS_NEEDED = "thumbnails:needed";
+export const THUMBNAILS_READY = "thumbnails:ready";
 
 export function onScanStarted(cb: (e: ScanStartedEvent) => void): Promise<UnlistenFn> {
   return listen<ScanStartedEvent>(SCAN_STARTED, (ev) => cb(ev.payload));
@@ -34,4 +38,10 @@ export function onFilesAdded(cb: (e: FilesAddedEvent) => void): Promise<Unlisten
 }
 export function onMetadataReady(cb: (e: MetadataReadyEvent) => void): Promise<UnlistenFn> {
   return listen<MetadataReadyEvent>(METADATA_READY, (ev) => cb(ev.payload));
+}
+export function onThumbnailsNeeded(cb: (e: ThumbnailsNeededEvent) => void): Promise<UnlistenFn> {
+  return listen<ThumbnailsNeededEvent>(THUMBNAILS_NEEDED, (ev) => cb(ev.payload));
+}
+export function onThumbnailsReady(cb: (e: ThumbnailsReadyEvent) => void): Promise<UnlistenFn> {
+  return listen<ThumbnailsReadyEvent>(THUMBNAILS_READY, (ev) => cb(ev.payload));
 }

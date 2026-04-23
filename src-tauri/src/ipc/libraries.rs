@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::db;
 use crate::error::IpcError;
@@ -35,6 +35,11 @@ pub fn add_library(
             .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
         db::libraries::add(&conn, &path)?
     };
+
+    // Allowlist this library's path for the asset:// protocol so the thumbnail
+    // worker can `fetch(convertFileSrc(absPath))` mesh bytes. Static scope in
+    // tauri.conf.json is empty because paths are only known at runtime.
+    let _ = app.asset_protocol_scope().allow_directory(&library.path, true);
 
     // Start the file watcher before kicking off the initial scan so no events
     // are missed during the walk. Failures here are non-fatal — surface via

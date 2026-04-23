@@ -1,3 +1,4 @@
+mod cache;
 mod db;
 mod error;
 mod events;
@@ -24,10 +25,20 @@ pub fn run() {
         .setup(|app| {
             let app_data = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data)?;
+            let thumb_dir = cache::thumb_cache_dir(&app_data);
+            std::fs::create_dir_all(&thumb_dir)?;
             let db_path = app_data.join("library.db");
             let conn = db::open(&db_path)?;
             let state = AppState::new(conn);
             app.manage(Arc::clone(&state));
+
+            // Scope the asset:// protocol at runtime. `tauri.conf.json` ships
+            // with an empty static scope because library paths aren't known
+            // until the user picks them. The thumbnail dir + every existing
+            // library path needs to be allowlisted so `convertFileSrc(path)`
+            // URLs load in `<img>` / `fetch`.
+            let asset_scope = app.asset_protocol_scope();
+            let _ = asset_scope.allow_directory(&thumb_dir, true);
 
             // Start a watcher for every library already present in the DB.
             // A missing or unreadable path surfaces via scan:error but does
@@ -41,6 +52,7 @@ pub fn run() {
             };
             let handle = app.handle();
             for lib in libraries {
+                let _ = asset_scope.allow_directory(&lib.path, true);
                 match scan::watcher::start(
                     handle.clone(),
                     Arc::clone(&state),
@@ -66,6 +78,10 @@ pub fn run() {
             ipc::files::list_files,
             ipc::files::get_file_details,
             ipc::files::rescan_library,
+            ipc::thumbnails::save_thumbnail,
+            ipc::thumbnails::get_thumbnail_cache_dir,
+            ipc::thumbnails::get_mesh_path,
+            ipc::thumbnails::list_thumbnail_keys,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

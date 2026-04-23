@@ -33,3 +33,35 @@ export function getFileDetails(id: number): Promise<FileDetails> {
 export function rescanLibrary(id: number): Promise<void> {
   return invoke<void>("rescan_library", { id });
 }
+
+// Thumbnail IPC — see src-tauri/src/ipc/thumbnails.rs.
+//
+// `save_thumbnail` is the one command that takes its payload as the raw
+// request body (a Uint8Array) instead of a JSON arg map. Spike 3 measured
+// ~74× speedup vs a JSON-encoded Vec<u8>. Scalars travel via `x-*` headers.
+export function saveThumbnail(
+  cacheKey: string,
+  width: number,
+  height: number,
+  png: Uint8Array,
+): Promise<void> {
+  return invoke<void>("save_thumbnail", png, {
+    headers: {
+      "x-cache-key": cacheKey,
+      "x-width": String(width),
+      "x-height": String(height),
+    },
+  });
+}
+
+export function getThumbnailCacheDir(): Promise<string> {
+  return invoke<string>("get_thumbnail_cache_dir");
+}
+
+export function getMeshPath(fileId: number): Promise<string> {
+  return invoke<string>("get_mesh_path", { fileId });
+}
+
+export function listThumbnailKeys(): Promise<string[]> {
+  return invoke<string[]>("list_thumbnail_keys");
+}

@@ -19,3 +19,6 @@ export type { ScanStartedEvent } from "./ScanStartedEvent";
 export type { Sort } from "./Sort";
 export type { SortDirection } from "./SortDirection";
 export type { SortKey } from "./SortKey";
+export type { ThumbnailsNeededEvent } from "./ThumbnailsNeededEvent";
+export type { ThumbnailsNeededItem } from "./ThumbnailsNeededItem";
+export type { ThumbnailsReadyEvent } from "./ThumbnailsReadyEvent";

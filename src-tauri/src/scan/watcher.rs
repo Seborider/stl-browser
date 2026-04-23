@@ -178,6 +178,7 @@ fn apply_and_emit(
         };
         if !inserted.is_empty() {
             events::files_added(app, inserted.clone());
+            super::emit_thumbnails_needed(app, state, library_path, &inserted);
             for entry in inserted {
                 let abs = library_path
                     .join(entry.rel_path.clone())
@@ -233,6 +234,7 @@ fn apply_and_emit(
         };
         if !entries.is_empty() {
             events::files_updated(app, entries.clone());
+            super::emit_thumbnails_needed(app, state, library_path, &entries);
             for entry in entries {
                 let abs = library_path
                     .join(entry.rel_path.clone())

@@ -52,6 +52,18 @@ const MIGRATIONS: &[&str] = &[
       )
     );
     "#,
+    // v3 — thumbnails cache index per PLAN.md §4. Keyed on cache_key so
+    // identical files across libraries share a single PNG on disk. The PNG
+    // itself lives at `<app_data>/thumbnails/<cache_key>.png`.
+    r#"
+    CREATE TABLE thumbnails (
+      cache_key    TEXT PRIMARY KEY,
+      generated_at INTEGER NOT NULL,
+      width        INTEGER NOT NULL,
+      height       INTEGER NOT NULL
+    );
+    CREATE INDEX idx_thumbnails_generated ON thumbnails(generated_at);
+    "#,
 ];
 
 pub fn run(conn: &mut Connection) -> Result<(), IpcError> {
@@ -108,9 +120,9 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(versions, vec![1, 2]);
+        assert_eq!(versions, vec![1, 2, 3]);
 
-        // files + mesh_metadata exist
+        // files + mesh_metadata + thumbnails exist
         let has = |t: &str| -> bool {
             conn.query_row(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
@@ -121,6 +133,7 @@ mod tests {
         assert!(has("libraries"));
         assert!(has("files"));
         assert!(has("mesh_metadata"));
+        assert!(has("thumbnails"));
     }
 
     #[test]
@@ -143,7 +156,7 @@ mod tests {
         let max: i64 = conn
             .query_row("SELECT MAX(version) FROM schema_version", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(max, 2);
+        assert_eq!(max, 3);
     }
 
     #[test]

@@ -163,3 +163,36 @@ pub struct MetadataReadyEvent {
     pub file_id: i64,
     pub metadata: MeshMetadata,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbnailsNeededItem {
+    #[ts(type = "number")]
+    pub file_id: i64,
+    pub cache_key: String,
+    pub abs_path: String,
+    pub extension: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbnailsNeededEvent {
+    pub items: Vec<ThumbnailsNeededItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ThumbnailsReadyEvent {
+    pub cache_key: String,
+    #[ts(type = "number")]
+    pub width: i64,
+    #[ts(type = "number")]
+    pub height: i64,
+    #[ts(type = "number")]
+    pub generated_at: i64,
+    #[ts(type = "number[]")]
+    pub file_ids: Vec<i64>,
+}

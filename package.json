@@ -16,9 +16,11 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "fuse.js": "^7.3.0",
+    "linkedom": "^0.18.12",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-virtuoso": "^4.18.5",
+    "three": "^0.184.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -26,6 +28,7 @@
     "@tauri-apps/cli": "^2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/three": "^0.184.0",
     "@vitejs/plugin-react": "^4.6.0",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.8.3",

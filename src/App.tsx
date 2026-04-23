@@ -12,6 +12,7 @@ import { useVisibleFiles } from "./hooks/useVisibleFiles";
 import { useLibraries } from "./hooks/useLibraries";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useLiveEvents } from "./hooks/useLiveEvents";
+import { useThumbnailBackfill } from "./hooks/useThumbnailBackfill";
 import { clamp } from "./hooks/useResizablePanes";
 import "./App.css";
 
@@ -29,6 +30,7 @@ function App() {
 
   const files = useVisibleFiles();
   const { libraries } = useLibraries();
+  useThumbnailBackfill(libraries);
   const selectedFile = useMemo(
     () =>
       selectedFileId !== null

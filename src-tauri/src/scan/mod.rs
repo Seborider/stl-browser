@@ -14,9 +14,56 @@ use crate::error::IpcError;
 use crate::events;
 use crate::mesh;
 use crate::state::AppState;
+use crate::types::{FileEntry, ThumbnailsNeededItem};
 
 pub mod walker;
 pub mod watcher;
+
+/// For each entry, decide whether a `thumbnails:needed` payload item should be
+/// emitted (i.e. its cache_key has no PNG yet) and batch-emit those.
+/// Called from both the initial walker flush and the watcher's add/update path
+/// so both sources share one de-dup rule.
+pub fn emit_thumbnails_needed(
+    app: &AppHandle,
+    state: &AppState,
+    library_path: &std::path::Path,
+    entries: &[FileEntry],
+) {
+    if entries.is_empty() {
+        return;
+    }
+    let keys: Vec<String> = entries.iter().map(|f| f.cache_key.clone()).collect();
+    let missing = {
+        let conn = match state.db.lock() {
+            Ok(g) => g,
+            Err(_) => return,
+        };
+        match db::thumbnails::filter_missing(&conn, &keys) {
+            Ok(s) => s,
+            Err(_) => return,
+        }
+    };
+    if missing.is_empty() {
+        return;
+    }
+    let items: Vec<ThumbnailsNeededItem> = entries
+        .iter()
+        .filter(|f| missing.contains(&f.cache_key))
+        .map(|f| {
+            let abs = library_path
+                .join(&f.rel_path)
+                .to_string_lossy()
+                .to_string();
+            ThumbnailsNeededItem {
+                file_id: f.id,
+                cache_key: f.cache_key.clone(),
+                abs_path: abs,
+                extension: f.extension.clone(),
+            }
+        })
+        .collect();
+    events::thumbnails_needed(app, items);
+}
 
 /// Re-parse mesh metadata for a single file and emit `metadata:ready`.
 /// Used by Phase 3's scan stage 2 and by the Phase 4 watcher when a file's
@@ -92,6 +139,7 @@ pub fn start_for_library(app: AppHandle, state: Arc<AppState>, library_id: i64) 
 
             let flush = |state: &AppState,
                          app: &AppHandle,
+                         lib_path: &std::path::Path,
                          buf: &mut Vec<FileRow>,
                          scanned_total: u64|
              -> Result<(), IpcError> {
@@ -107,7 +155,8 @@ pub fn start_for_library(app: AppHandle, state: Arc<AppState>, library_id: i64) 
                 };
                 buf.clear();
                 if !inserted.is_empty() {
-                    events::files_added(app, inserted);
+                    events::files_added(app, inserted.clone());
+                    emit_thumbnails_needed(app, state, lib_path, &inserted);
                 }
                 events::scan_progress(app, library_id, scanned_total);
                 Ok(())
@@ -117,13 +166,13 @@ pub fn start_for_library(app: AppHandle, state: Arc<AppState>, library_id: i64) 
                 buffer.push(row);
                 scanned += 1;
                 if buffer.len() >= 100 || last_flush.elapsed() >= Duration::from_millis(250) {
-                    flush(&walk_state, &walk_app, &mut buffer, scanned)
+                    flush(&walk_state, &walk_app, &library_path, &mut buffer, scanned)
                         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
                     last_flush = Instant::now();
                 }
                 Ok(())
             })?;
-            flush(&walk_state, &walk_app, &mut buffer, scanned)?;
+            flush(&walk_state, &walk_app, &library_path, &mut buffer, scanned)?;
             Ok(scanned)
         })
         .await;
