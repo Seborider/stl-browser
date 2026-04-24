@@ -56,7 +56,7 @@ Tauri UI changes cannot be observed from the agent side — after `pnpm tauri de
 
 ## Current phase
 
-Phase 4 (file watching: `notify-debouncer-full`-backed per-library watchers, diff against DB for each debounced batch, emit `files:added` / `files:removed` / `files:updated`, re-parse metadata on updates) complete. Next: Phase 5 — thumbnail pipeline. See `PLAN.md` §2 for the full phased roadmap.
+Phase 5 (thumbnail pipeline: Rust emits `thumbnails:needed` for missing cache keys; TS render queue dispatches to a pool of 3 Web Workers running three.js + OffscreenCanvas with STL/OBJ/3MF loaders; PNG bytes return via raw-body IPC; Rust writes `<app_data>/thumbnails/<cache_key>.png` atomically and emits `thumbnails:ready`; the grid tile swaps its color placeholder for an `<img src=asset://…>`) complete. WKWebView workers lack `DOMParser`, so `3MFLoader` is fed a `linkedom`-backed polyfill. Next: Phase 6 — detail viewer. See `PLAN.md` §2 for the full phased roadmap.
 
 ### Bindings workflow
 ts-rs bindings regenerate via `pnpm bindings` (runs `cargo test --lib export_bindings_`), chained into `predev` and `prebuild` so `pnpm tauri dev` and `pnpm tauri build` regenerate automatically. Doing it from `build.rs` needs the workspace-split trick (separate types crate) to avoid cargo target-dir lock recursion; revisit if the pnpm chain becomes a problem.

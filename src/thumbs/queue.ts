@@ -3,11 +3,17 @@ import type { ThumbnailsNeededItem } from "../generated";
 import { saveThumbnail } from "../ipc/commands";
 import type { RenderJob, RenderResult } from "./render-worker";
 
-// Single long-lived worker shared by the app. Spike 1 showed it handles 100k
-// and 1M triangle STLs with ~25× headroom vs targets, and a reused canvas +
-// renderer stays stable across jobs. One worker keeps WebGL contexts low.
+// Pool of long-lived workers. Each owns its own OffscreenCanvas + WebGL
+// context, so N jobs run in parallel. 3 is a balance: enough parallelism
+// that a slow parser (e.g. 3MF's linkedom-based XML walk) doesn't stall
+// quick STLs behind it, without burning a context per hardware thread.
+const POOL_SIZE = 3;
 
-type WorkerStatus = "idle" | "busy";
+interface PoolWorker {
+  worker: Worker;
+  busy: boolean;
+  currentKey: string | null;
+}
 
 export interface RenderQueue {
   enqueue: (items: ThumbnailsNeededItem[]) => void;
@@ -38,75 +44,87 @@ export function disposeRenderQueue(): void {
 }
 
 export function createRenderQueue(): RenderQueue {
-  const worker = new Worker(
-    new URL("./render-worker.ts", import.meta.url),
-    { type: "module" },
-  );
+  const pool: PoolWorker[] = [];
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const worker = new Worker(
+      new URL("./render-worker.ts", import.meta.url),
+      { type: "module" },
+    );
+    const entry: PoolWorker = { worker, busy: false, currentKey: null };
+    pool.push(entry);
+
+    worker.addEventListener(
+      "message",
+      async (ev: MessageEvent<RenderResult>) => {
+        const msg = ev.data;
+        entry.busy = false;
+        entry.currentKey = null;
+        if (msg.kind === "ok") {
+          try {
+            await saveThumbnail(
+              msg.cacheKey,
+              msg.width,
+              msg.height,
+              new Uint8Array(msg.png),
+            );
+          } catch (e) {
+            console.error("save_thumbnail failed", msg.cacheKey, e);
+          }
+        } else {
+          console.warn("thumbnail render failed", msg.cacheKey, msg.message);
+        }
+        pump();
+      },
+    );
+
+    worker.addEventListener("error", (ev) => {
+      console.error("thumbnail worker error", ev.message, ev.error);
+      entry.busy = false;
+      entry.currentKey = null;
+      pump();
+    });
+  }
 
   // FIFO with priority. Duplicate cacheKey entries are collapsed — the first
   // enqueue wins; a later `prioritize` bumps it ahead.
   const queue: QueueItem[] = [];
   const byKey = new Map<string, QueueItem>();
-  let status: WorkerStatus = "idle";
-  let current: QueueItem | null = null;
 
   function sort() {
     queue.sort((a, b) => b.priority - a.priority);
   }
 
-  function pump() {
-    if (status !== "idle") return;
-    const next = queue.shift();
-    if (!next) return;
-    byKey.delete(next.cacheKey);
-    status = "busy";
-    current = next;
-    const job: RenderJob = {
-      fileId: next.fileId,
-      cacheKey: next.cacheKey,
-      meshUrl: convertFileSrc(next.absPath),
-      extension: next.extension,
-      width: 512,
-      height: 512,
-    };
-    worker.postMessage(job);
+  function isCurrent(cacheKey: string): boolean {
+    for (const w of pool) if (w.currentKey === cacheKey) return true;
+    return false;
   }
 
-  worker.addEventListener("message", async (ev: MessageEvent<RenderResult>) => {
-    const msg = ev.data;
-    status = "idle";
-    current = null;
-    if (msg.kind === "ok") {
-      try {
-        await saveThumbnail(
-          msg.cacheKey,
-          msg.width,
-          msg.height,
-          new Uint8Array(msg.png),
-        );
-      } catch (e) {
-        console.error("save_thumbnail failed", msg.cacheKey, e);
-      }
-    } else {
-      console.warn("thumbnail render failed", msg.cacheKey, msg.message);
+  function pump() {
+    for (const w of pool) {
+      if (w.busy) continue;
+      const next = queue.shift();
+      if (!next) return;
+      byKey.delete(next.cacheKey);
+      w.busy = true;
+      w.currentKey = next.cacheKey;
+      const job: RenderJob = {
+        fileId: next.fileId,
+        cacheKey: next.cacheKey,
+        meshUrl: convertFileSrc(next.absPath),
+        extension: next.extension,
+        width: 512,
+        height: 512,
+      };
+      w.worker.postMessage(job);
     }
-    pump();
-  });
-
-  worker.addEventListener("error", (ev) => {
-    console.error("thumbnail worker error", ev.message, ev.error);
-    // Free the slot so the queue keeps moving even if one job wedges the worker.
-    status = "idle";
-    current = null;
-    pump();
-  });
+  }
 
   return {
     enqueue(items) {
       let added = false;
       for (const it of items) {
         if (byKey.has(it.cacheKey)) continue;
-        if (current?.cacheKey === it.cacheKey) continue;
+        if (isCurrent(it.cacheKey)) continue;
         const entry: QueueItem = { ...it, priority: 0 };
         queue.push(entry);
         byKey.set(it.cacheKey, entry);
@@ -140,7 +158,8 @@ export function createRenderQueue(): RenderQueue {
     },
 
     dispose() {
-      worker.terminate();
+      for (const w of pool) w.worker.terminate();
+      pool.length = 0;
       queue.length = 0;
       byKey.clear();
     },

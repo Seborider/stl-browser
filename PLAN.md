@@ -179,6 +179,7 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
   - Grid swaps placeholder for real image.
 - Integrate with grid scroll position: bump priority for visible-and-near tiles.
 - **Exit criterion:** 500-file folder fully thumbnailed within ~1 min, cache persists across restarts, scrolling stays smooth throughout.
+- **Phase 5 — Status: complete.**
 
 ### Phase 6 — Detail viewer (1–2 days)
 - R3F canvas with OrbitControls, ambient + directional lights.
