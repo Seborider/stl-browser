@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use rusqlite::{params, Connection, ToSql};
+use rusqlite::{params, params_from_iter, Connection};
 
 use crate::error::IpcError;
 
@@ -37,13 +37,8 @@ pub fn filter_missing(
         "SELECT cache_key FROM thumbnails WHERE cache_key IN ({placeholders})"
     );
     let mut stmt = conn.prepare(&sql)?;
-    let args: Vec<Box<dyn ToSql>> = cache_keys
-        .iter()
-        .map(|k| Box::new(k.clone()) as Box<dyn ToSql>)
-        .collect();
-    let param_refs: Vec<&dyn ToSql> = args.iter().map(|b| b.as_ref()).collect();
     let mut present: HashSet<String> = HashSet::new();
-    let mut rows = stmt.query(rusqlite::params_from_iter(param_refs.iter()))?;
+    let mut rows = stmt.query(params_from_iter(cache_keys))?;
     while let Some(row) = rows.next()? {
         present.insert(row.get(0)?);
     }

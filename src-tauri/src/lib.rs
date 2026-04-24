@@ -80,7 +80,6 @@ pub fn run() {
             ipc::files::rescan_library,
             ipc::thumbnails::save_thumbnail,
             ipc::thumbnails::get_thumbnail_cache_dir,
-            ipc::thumbnails::get_mesh_path,
             ipc::thumbnails::list_thumbnail_keys,
         ])
         .run(tauri::generate_context!())

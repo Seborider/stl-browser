@@ -60,11 +60,6 @@ pub async fn save_thumbnail(
         .and_then(|s| s.parse().ok())
         .unwrap_or(0);
 
-    if !cache::is_valid_cache_key(&cache_key) {
-        return Err(IpcError::Invalid(format!(
-            "invalid cache_key: {cache_key:?}"
-        )));
-    }
     if bytes.len() < 8 || &bytes[..8] != b"\x89PNG\r\n\x1a\n" {
         return Err(IpcError::Invalid("body is not a PNG".into()));
     }
@@ -104,35 +99,6 @@ pub fn get_thumbnail_cache_dir(app: AppHandle) -> Result<String, IpcError> {
     let dir = cache::thumb_cache_dir(&app_data_dir(&app)?);
     std::fs::create_dir_all(&dir)?;
     Ok(dir.to_string_lossy().to_string())
-}
-
-/// Return the absolute filesystem path of a file (library path + rel_path).
-/// The worker loads this via `fetch(convertFileSrc(path))` to parse the mesh.
-#[tauri::command]
-pub fn get_mesh_path(
-    state: State<'_, Arc<AppState>>,
-    file_id: i64,
-) -> Result<String, IpcError> {
-    let conn = state
-        .db
-        .lock()
-        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
-    let (lib_path, rel): (String, String) = conn
-        .query_row(
-            "SELECT l.path, f.rel_path FROM files f\n\
-             JOIN libraries l ON l.id = f.library_id\n\
-             WHERE f.id = ?1",
-            [file_id],
-            |row| Ok((row.get(0)?, row.get(1)?)),
-        )
-        .map_err(|e| match e {
-            rusqlite::Error::QueryReturnedNoRows => {
-                IpcError::NotFound(format!("file id {file_id}"))
-            }
-            other => other.into(),
-        })?;
-    let abs = PathBuf::from(lib_path).join(rel);
-    Ok(abs.to_string_lossy().to_string())
 }
 
 /// List cache_keys that already have a PNG. Frontend seeds its queue with

@@ -112,8 +112,6 @@ export function createRenderQueue(): RenderQueue {
         cacheKey: next.cacheKey,
         meshUrl: convertFileSrc(next.absPath),
         extension: next.extension,
-        width: 512,
-        height: 512,
       };
       w.worker.postMessage(job);
     }

@@ -33,8 +33,6 @@ export interface RenderJob {
   cacheKey: string;
   meshUrl: string; // asset:// URL for the mesh file
   extension: string;
-  width: number;
-  height: number;
 }
 
 export interface RenderSuccess {

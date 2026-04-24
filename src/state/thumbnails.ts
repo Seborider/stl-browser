@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { convertFileSrc } from "@tauri-apps/api/core";
 
 // Thumbnails are addressed by `cache_key` (blake3 of abs_path + mtime + size).
 // Multiple file rows can share one cache_key when their content is identical.
@@ -12,20 +11,14 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 interface ThumbsState {
   cacheDir: string | null;
   availableKeys: Record<string, true>;
-  // Bumped whenever availableKeys gains entries — used by consumers to
-  // invalidate memoized URLs derived from it without keeping the full set
-  // as a subscription dependency.
-  version: number;
 
   setCacheDir: (dir: string) => void;
   markAvailable: (keys: string[]) => void;
-  thumbnailSrc: (cacheKey: string) => string | null;
 }
 
-export const useThumbsStore = create<ThumbsState>((set, get) => ({
+export const useThumbsStore = create<ThumbsState>((set) => ({
   cacheDir: null,
   availableKeys: {},
-  version: 0,
 
   setCacheDir: (dir) => set({ cacheDir: dir }),
 
@@ -41,16 +34,6 @@ export const useThumbsStore = create<ThumbsState>((set, get) => ({
         }
       }
       if (!changed) return s;
-      return { availableKeys: next, version: s.version + 1 };
+      return { availableKeys: next };
     }),
-
-  thumbnailSrc: (cacheKey) => {
-    const { cacheDir, availableKeys } = get();
-    if (!cacheDir) return null;
-    if (!availableKeys[cacheKey]) return null;
-    // `?v=<version>` defeats the webview's asset-protocol cache so a
-    // regenerated thumbnail (same cache_key is rare, but possible via rescan
-    // or a stale-cache bug) actually refreshes in the UI.
-    return `${convertFileSrc(`${cacheDir}/${cacheKey}.png`)}?v=${cacheKey.slice(0, 8)}`;
-  },
 }));

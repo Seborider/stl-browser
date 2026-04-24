@@ -58,10 +58,6 @@ export function getThumbnailCacheDir(): Promise<string> {
   return invoke<string>("get_thumbnail_cache_dir");
 }
 
-export function getMeshPath(fileId: number): Promise<string> {
-  return invoke<string>("get_mesh_path", { fileId });
-}
-
 export function listThumbnailKeys(): Promise<string[]> {
   return invoke<string[]>("list_thumbnail_keys");
 }
