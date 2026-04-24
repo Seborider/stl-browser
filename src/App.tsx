@@ -9,6 +9,7 @@ import { GridSizeSlider } from "./components/GridSizeSlider";
 import { SearchBox } from "./components/SearchBox";
 import { useAppStore } from "./state/store";
 import { useVisibleFiles } from "./hooks/useVisibleFiles";
+import { DetailViewer } from "./components/viewer/DetailViewer";
 import { useLibraries } from "./hooks/useLibraries";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useLiveEvents } from "./hooks/useLiveEvents";
@@ -25,6 +26,8 @@ function App() {
   const paneWidths = useAppStore((s) => s.paneWidths);
   const setPaneWidth = useAppStore((s) => s.setPaneWidth);
   const selectedFileId = useAppStore((s) => s.selectedFileId);
+  const viewerFileId = useAppStore((s) => s.viewerFileId);
+  const setViewerFileId = useAppStore((s) => s.setViewerFileId);
 
   useLiveEvents();
 
@@ -37,6 +40,13 @@ function App() {
         ? files.find((f) => f.id === selectedFileId) ?? null
         : null,
     [files, selectedFileId],
+  );
+  const viewerFile = useMemo(
+    () =>
+      viewerFileId !== null
+        ? files.find((f) => f.id === viewerFileId) ?? null
+        : null,
+    [files, viewerFileId],
   );
 
   const virtuosoRef = useRef<VirtuosoGridHandle | null>(null);
@@ -89,7 +99,7 @@ function App() {
             virtuosoRef={virtuosoRef}
             onColumnsChange={setColumns}
             onRangeChanged={(r) => (visibleRangeRef.current = r)}
-            onActivate={() => inspectorRef.current?.focus()}
+            onActivate={setViewerFileId}
           />
         </div>
       </section>
@@ -109,6 +119,10 @@ function App() {
       >
         <Inspector ref={inspectorRef} file={selectedFile} libraries={libraries} />
       </div>
+
+      {viewerFile ? (
+        <DetailViewer file={viewerFile} onClose={() => setViewerFileId(null)} />
+      ) : null}
     </div>
   );
 }

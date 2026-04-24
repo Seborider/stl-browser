@@ -13,6 +13,7 @@ export interface PaneWidths {
 interface AppState {
   activeLibraryId: number | null;
   selectedFileId: number | null;
+  viewerFileId: number | null;
   sortKey: SortKey;
   sortDirection: SortDirection;
   search: string;
@@ -21,6 +22,7 @@ interface AppState {
 
   setActiveLibrary: (id: number | null) => void;
   setSelectedFile: (id: number | null) => void;
+  setViewerFileId: (id: number | null) => void;
   setSort: (key: SortKey, direction?: SortDirection) => void;
   toggleSortDirection: () => void;
   setSearch: (q: string) => void;
@@ -35,6 +37,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       activeLibraryId: null,
       selectedFileId: null,
+      viewerFileId: null,
       sortKey: "name",
       sortDirection: "asc",
       search: "",
@@ -44,6 +47,7 @@ export const useAppStore = create<AppState>()(
       setActiveLibrary: (id) =>
         set({ activeLibraryId: id, selectedFileId: null }),
       setSelectedFile: (id) => set({ selectedFileId: id }),
+      setViewerFileId: (id) => set({ viewerFileId: id }),
       setSort: (key, direction) =>
         set((s) => ({
           sortKey: key,

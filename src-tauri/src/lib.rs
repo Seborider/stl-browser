@@ -77,6 +77,7 @@ pub fn run() {
             ipc::libraries::remove_library,
             ipc::files::list_files,
             ipc::files::get_file_details,
+            ipc::files::get_mesh_asset_url,
             ipc::files::rescan_library,
             ipc::thumbnails::save_thumbnail,
             ipc::thumbnails::get_thumbnail_cache_dir,

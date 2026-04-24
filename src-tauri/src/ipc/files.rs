@@ -34,6 +34,21 @@ pub fn get_file_details(
     Ok(FileDetails { file, metadata })
 }
 
+/// The library root is allowlisted on the asset-protocol scope at startup
+/// (see `lib.rs`), so `convertFileSrc`-ing this path yields a fetchable URL.
+#[tauri::command]
+pub fn get_mesh_asset_url(
+    state: State<'_, Arc<AppState>>,
+    id: i64,
+) -> Result<String, IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    let abs = db::files::abs_path_for(&conn, id)?;
+    Ok(abs.to_string_lossy().into_owned())
+}
+
 #[tauri::command]
 pub fn rescan_library(
     app: AppHandle,

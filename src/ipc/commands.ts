@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import type {
   FileDetails,
   FileEntry,
@@ -32,6 +32,11 @@ export function getFileDetails(id: number): Promise<FileDetails> {
 
 export function rescanLibrary(id: number): Promise<void> {
   return invoke<void>("rescan_library", { id });
+}
+
+export async function getMeshAssetUrl(id: number): Promise<string> {
+  const absPath = await invoke<string>("get_mesh_asset_url", { id });
+  return convertFileSrc(absPath);
 }
 
 // Thumbnail IPC — see src-tauri/src/ipc/thumbnails.rs.

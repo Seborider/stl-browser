@@ -19,7 +19,7 @@ interface Props {
   virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
   onColumnsChange: (columns: number) => void;
   onRangeChanged: (range: { startIndex: number; endIndex: number }) => void;
-  onActivate: () => void;
+  onActivate: (fileId: number) => void;
 }
 
 export function Grid({
@@ -111,7 +111,7 @@ export function Grid({
             file={file}
             selected={file.id === selectedFileId}
             onSelect={() => setSelectedFile(file.id)}
-            onActivate={onActivate}
+            onActivate={() => onActivate(file.id)}
           />
         )}
       />

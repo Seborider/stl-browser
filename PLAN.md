@@ -436,14 +436,14 @@ If the queue explodes (e.g. a 50k-file library just got added), cap enqueued job
 |---------|---------|-----|
 | `@tauri-apps/api` | `^2` | IPC bindings. |
 | `@tauri-apps/cli` | `^2` | Dev + build. |
-| `react`, `react-dom` | `^18` | UI. |
+| `react`, `react-dom` | `^19` | UI. |
 | `typescript` | `^5` | Typed FE. |
-| `vite` | `^5` | Bundler. |
+| `vite` | `^7` | Bundler. |
 | `@vitejs/plugin-react` | `^4` | React Fast Refresh. |
-| `three` | `^0.160` | 3D engine; loaders for STL/3MF/OBJ. |
-| `@types/three` | `^0.160` | Types for above. |
-| `@react-three/fiber` | `^8` | React reconciler for three.js (detail viewer only). |
-| `@react-three/drei` | `^9` | OrbitControls, Environment, helpers. |
+| `three` | `^0.184` | 3D engine; loaders for STL/3MF/OBJ. |
+| `@types/three` | `^0.184` | Types for above. |
+| `@react-three/fiber` | `^9` | React reconciler for three.js (detail viewer only). Requires React 19. |
+| `@react-three/drei` | `^10` | OrbitControls, Environment, helpers. Requires R3F v9. |
 | `react-virtuoso` | `^4` | Virtualized grid. |
 | `zustand` | `^4` | State store. |
 | `tailwindcss` | `^3`, `autoprefixer`, `postcss` | Styling. |

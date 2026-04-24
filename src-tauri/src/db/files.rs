@@ -136,6 +136,25 @@ pub fn list_files(conn: &Connection, query: &FileQuery) -> Result<Vec<FileEntry>
     Ok(rows?)
 }
 
+/// Resolve the absolute on-disk path for a file id via a single indexed join.
+pub fn abs_path_for(conn: &Connection, id: i64) -> Result<std::path::PathBuf, IpcError> {
+    conn.query_row(
+        "SELECT l.path, f.rel_path FROM files f \
+         JOIN libraries l ON l.id = f.library_id \
+         WHERE f.id = ?1",
+        params![id],
+        |row| {
+            let lib_path: String = row.get(0)?;
+            let rel: String = row.get(1)?;
+            Ok(std::path::PathBuf::from(lib_path).join(rel))
+        },
+    )
+    .map_err(|e| match e {
+        rusqlite::Error::QueryReturnedNoRows => IpcError::NotFound(format!("file id {id}")),
+        other => other.into(),
+    })
+}
+
 pub fn get_by_id(conn: &Connection, id: i64) -> Result<FileEntry, IpcError> {
     conn.query_row(
         "SELECT id, library_id, rel_path, name, extension, size_bytes, mtime_ms, cache_key\n\
