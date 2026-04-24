@@ -19,6 +19,7 @@ use crate::state::AppState;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         // `setup` runs once on startup with access to the app handle. We use
         // it to resolve the per-app data dir, open SQLite, apply migrations,
         // then register the connection as shared state.
@@ -82,6 +83,7 @@ pub fn run() {
             ipc::thumbnails::save_thumbnail,
             ipc::thumbnails::get_thumbnail_cache_dir,
             ipc::thumbnails::list_thumbnail_keys,
+            ipc::system::reveal_in_finder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

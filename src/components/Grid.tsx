@@ -121,7 +121,7 @@ export function Grid({
 
 function EmptyState() {
   return (
-    <div className="flex h-full items-center justify-center p-8 text-center text-sm text-neutral-500">
+    <div className="flex h-full items-center justify-center p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
       No files yet. Add a library folder to get started — scanning lands in Phase 3.
     </div>
   );

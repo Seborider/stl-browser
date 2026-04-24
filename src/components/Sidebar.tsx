@@ -49,16 +49,16 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-full flex-col overflow-hidden bg-neutral-900/60 text-sm">
+    <aside className="flex h-full flex-col overflow-hidden bg-neutral-50 text-sm dark:bg-neutral-900">
       <div className="flex items-center justify-between px-4 pt-5 pb-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-500">
           Libraries
         </span>
         <button
           type="button"
           onClick={handleAdd}
           disabled={busy}
-          className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-0.5 text-[11px] text-neutral-300 transition-colors hover:border-neutral-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md border border-neutral-300 bg-white/70 px-2 py-0.5 text-[11px] text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:text-white"
           title="Add a library folder">
           + Add
         </button>
@@ -91,8 +91,8 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="mt-auto border-t border-neutral-800/70 px-4 py-3 text-[11px] text-neutral-500">
-        Phase 5 · Thumbnail pipeline
+      <div className="mt-auto border-t border-neutral-200/70 px-4 py-3 text-[11px] text-neutral-500 dark:border-neutral-800/70">
+        Phase 7 · macOS polish
       </div>
     </aside>
   );
@@ -110,14 +110,18 @@ function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
     <div
       className={
         "group flex items-center rounded-md transition-colors " +
-        (active ? "bg-indigo-500/15" : "hover:bg-neutral-800/70")
+        (active
+          ? "bg-indigo-500/15"
+          : "hover:bg-neutral-200/60 dark:hover:bg-neutral-800/70")
       }>
       <button
         type="button"
         onClick={onClick}
         className={
           "min-w-0 flex-1 truncate px-3 py-1.5 text-left " +
-          (active ? "text-indigo-200" : "text-neutral-300")
+          (active
+            ? "text-indigo-700 dark:text-indigo-200"
+            : "text-neutral-700 dark:text-neutral-300")
         }>
         {label}
       </button>
@@ -130,7 +134,7 @@ function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
           }}
           aria-label={`Remove ${label}`}
           title={`Remove ${label}`}
-          className="mr-1 rounded px-1.5 text-[13px] leading-none text-neutral-500 opacity-0 transition hover:text-red-400 group-hover:opacity-100">
+          className="mr-1 rounded px-1.5 text-[13px] leading-none text-neutral-500 opacity-0 transition hover:text-red-500 group-hover:opacity-100 dark:hover:text-red-400">
           ×
         </button>
       )}

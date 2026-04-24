@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from "react";
 import type { FileEntry, Library, MeshMetadata } from "../generated";
 import { formatBytes, formatColor, formatDate, formatLabel } from "../lib/format";
-import { getFileDetails } from "../ipc/commands";
+import { getFileDetails, revealInFinder } from "../ipc/commands";
 import { useFilesStore } from "../state/files";
 
 interface Props {
@@ -17,9 +17,9 @@ export const Inspector = forwardRef<HTMLDivElement, Props>(function Inspector(
     <aside
       ref={ref}
       tabIndex={-1}
-      className="flex h-full flex-col overflow-hidden bg-neutral-900/60 outline-none ring-inset focus-visible:ring-1 focus-visible:ring-indigo-500/40"
+      className="flex h-full flex-col overflow-hidden bg-neutral-100 outline-none ring-inset focus-visible:ring-1 focus-visible:ring-indigo-500/40 dark:bg-neutral-900"
     >
-      <div className="border-b border-neutral-800/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+      <div className="border-b border-neutral-200/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:border-neutral-800/70">
         Inspector
       </div>
       {file ? <Details file={file} libraries={libraries} /> : <EmptyState />}
@@ -30,8 +30,8 @@ export const Inspector = forwardRef<HTMLDivElement, Props>(function Inspector(
 function EmptyState() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-      <div className="h-20 w-20 rounded-xl border border-dashed border-neutral-700" />
-      <p className="text-sm text-neutral-400">No file selected</p>
+      <div className="h-20 w-20 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700" />
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">No file selected</p>
       <p className="text-xs text-neutral-500">
         Pick a tile in the grid to inspect its metadata.
       </p>
@@ -44,6 +44,17 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
 
   const metadataFromStore = useFilesStore((s) => s.metadataByFileId[file.id]);
   const [fetched, setFetched] = useState<MeshMetadata | null>(null);
+  const [revealError, setRevealError] = useState<string | null>(null);
+
+  const handleReveal = async () => {
+    if (!library) return;
+    setRevealError(null);
+    try {
+      await revealInFinder(`${library.path}/${file.relPath}`);
+    } catch (e) {
+      setRevealError(String(e));
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +75,7 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
       <div
-        className="flex h-32 w-full items-center justify-center rounded-lg ring-1 ring-inset ring-neutral-800"
+        className="flex h-32 w-full items-center justify-center rounded-lg ring-1 ring-inset ring-neutral-300 dark:ring-neutral-800"
         style={{ backgroundColor: formatColor(file.extension) }}
       >
         <span className="rounded bg-black/40 px-2 py-0.5 text-[11px] font-semibold tracking-wider text-white/90">
@@ -74,7 +85,7 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
 
       <div>
         <div
-          className="break-words text-sm font-medium text-neutral-100"
+          className="break-words text-sm font-medium text-neutral-900 dark:text-neutral-100"
           title={file.name}
         >
           {file.name}
@@ -94,8 +105,23 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
         <Row label="Modified" value={formatDate(file.mtimeMs)} />
       </dl>
 
+      <div>
+        <button
+          type="button"
+          onClick={handleReveal}
+          disabled={!library}
+          className="w-full rounded-md border border-neutral-300 bg-white/70 px-3 py-1.5 text-xs text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:text-white"
+          title="Reveal in Finder"
+        >
+          Reveal in Finder
+        </button>
+        {revealError && (
+          <p className="mt-1 text-[11px] text-red-600 dark:text-red-400">{revealError}</p>
+        )}
+      </div>
+
       {metadata && !metadata.parseError && metadata.bboxMin && metadata.bboxMax && (
-        <section className="space-y-1 border-t border-neutral-800 pt-3 text-[12px] text-neutral-300">
+        <section className="space-y-1 border-t border-neutral-200 pt-3 text-[12px] text-neutral-700 dark:border-neutral-800 dark:text-neutral-300">
           <div>
             <span className="text-neutral-500">Triangles:</span>{" "}
             {metadata.triangleCount?.toLocaleString() ?? "—"}
@@ -119,12 +145,12 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
         </section>
       )}
       {metadata?.parseError && (
-        <section className="border-t border-neutral-800 pt-3 text-[12px] text-red-400">
+        <section className="border-t border-neutral-200 pt-3 text-[12px] text-red-600 dark:border-neutral-800 dark:text-red-400">
           Parse failed: {metadata.parseError}
         </section>
       )}
       {!metadata && (
-        <section className="border-t border-neutral-800 pt-3 text-[12px] text-neutral-500">
+        <section className="border-t border-neutral-200 pt-3 text-[12px] text-neutral-500 dark:border-neutral-800">
           Parsing mesh…
         </section>
       )}
@@ -134,11 +160,11 @@ function Details({ file, libraries }: { file: FileEntry; libraries: Library[] })
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-neutral-800/60 pb-2 last:border-b-0 last:pb-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-neutral-200/70 pb-2 last:border-b-0 last:pb-0 dark:border-neutral-800/60">
       <dt className="text-[11px] uppercase tracking-wider text-neutral-500">
         {label}
       </dt>
-      <dd className="text-right text-neutral-200">{value}</dd>
+      <dd className="text-right text-neutral-800 dark:text-neutral-200">{value}</dd>
     </div>
   );
 }

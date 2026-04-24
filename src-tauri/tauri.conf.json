@@ -14,7 +14,8 @@
       {
         "title": "STL Browser",
         "width": 1280,
-        "height": 820
+        "height": 820,
+        "theme": null
       }
     ],
     "security": {

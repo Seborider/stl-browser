@@ -66,3 +66,7 @@ export function getThumbnailCacheDir(): Promise<string> {
 export function listThumbnailKeys(): Promise<string[]> {
   return invoke<string[]>("list_thumbnail_keys");
 }
+
+export function revealInFinder(path: string): Promise<void> {
+  return invoke<void>("reveal_in_finder", { path });
+}

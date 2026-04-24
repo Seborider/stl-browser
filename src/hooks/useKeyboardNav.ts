@@ -28,23 +28,29 @@ export function useKeyboardNav({
 }: Params) {
   const selectedFileId = useAppStore((s) => s.selectedFileId);
   const setSelectedFile = useAppStore((s) => s.setSelectedFile);
+  const viewerFileId = useAppStore((s) => s.viewerFileId);
+  const setViewerFileId = useAppStore((s) => s.setViewerFileId);
 
   // Keep handler's closure fresh without re-binding the listener every render.
   const latest = useRef({
     files,
     columns,
     selectedFileId,
+    viewerFileId,
     focusInspector,
     scrollToIndex,
     setSelectedFile,
+    setViewerFileId,
   });
   latest.current = {
     files,
     columns,
     selectedFileId,
+    viewerFileId,
     focusInspector,
     scrollToIndex,
     setSelectedFile,
+    setViewerFileId,
   };
 
   useEffect(() => {
@@ -55,10 +61,29 @@ export function useKeyboardNav({
         files,
         columns,
         selectedFileId,
+        viewerFileId,
         focusInspector,
         scrollToIndex,
         setSelectedFile,
+        setViewerFileId,
       } = latest.current;
+
+      // Space: Finder-style quick preview. Toggle the detail viewer for the
+      // selected file. Keep this before the `files.length === 0` guard so
+      // pressing Space with an already-open viewer still closes it.
+      if (e.key === " ") {
+        if (viewerFileId !== null) {
+          e.preventDefault();
+          setViewerFileId(null);
+          return;
+        }
+        if (selectedFileId !== null) {
+          e.preventDefault();
+          setViewerFileId(selectedFileId);
+          return;
+        }
+        return;
+      }
 
       if (files.length === 0) return;
 

@@ -195,6 +195,7 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
 - System fonts: Tailwind `font-sans` defaults to SF Pro on macOS.
 - Keyboard: space for quick preview (a la Finder).
 - **Exit criterion:** feels like a native Mac app to a non-technical tester.
+- **Phase 7 — Status: complete.**
 
 ### Phase 8 — Ship prep (1 day, can parallelize with 6–7)
 - Tauri bundler config for `.app` and `.dmg`.

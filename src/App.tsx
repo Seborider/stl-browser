@@ -74,7 +74,7 @@ function App() {
   });
 
   return (
-    <div className="flex h-screen w-screen flex-row overflow-hidden bg-neutral-950 font-sans text-neutral-100">
+    <div className="flex h-screen w-screen flex-row overflow-hidden bg-white font-sans text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div
         className="shrink-0"
         style={{ width: paneWidths.sidebar }}
@@ -91,7 +91,7 @@ function App() {
         }
       />
 
-      <section className="flex min-w-0 flex-1 flex-col">
+      <section className="flex min-w-0 flex-1 flex-col bg-neutral-50 dark:bg-neutral-950">
         <Toolbar count={files.length} />
         <div className="min-h-0 flex-1">
           <Grid
@@ -129,11 +129,11 @@ function App() {
 
 function Toolbar({ count }: { count: number }) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-neutral-800/70 bg-neutral-900/40 px-3">
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-neutral-200/70 bg-neutral-50/80 px-3 dark:border-neutral-800/70 dark:bg-neutral-900/40">
       <SearchBox />
-      <div className="h-5 w-px bg-neutral-800" />
+      <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
       <SortDropdown />
-      <div className="h-5 w-px bg-neutral-800" />
+      <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
       <GridSizeSlider />
       <div className="ml-auto text-[11px] tabular-nums text-neutral-500">
         {count.toLocaleString()} {count === 1 ? "file" : "files"}

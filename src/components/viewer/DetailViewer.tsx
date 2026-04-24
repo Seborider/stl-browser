@@ -40,9 +40,9 @@ export function DetailViewer({ file, onClose }: Props) {
   const handleError = useCallback((msg: string) => setError(msg), []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-950/95 backdrop-blur-sm">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-neutral-800/70 bg-neutral-900/60 px-3">
-        <div className="min-w-0 flex-1 truncate text-sm text-neutral-200" title={file.name}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-50/95 backdrop-blur-sm dark:bg-neutral-950/95">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-neutral-200/70 bg-neutral-100/80 px-3 dark:border-neutral-800/70 dark:bg-neutral-900/60">
+        <div className="min-w-0 flex-1 truncate text-sm text-neutral-800 dark:text-neutral-200" title={file.name}>
           {file.name}
         </div>
         <ToggleButton
@@ -60,7 +60,7 @@ export function DetailViewer({ file, onClose }: Props) {
         <button
           type="button"
           onClick={onClose}
-          className="ml-2 rounded px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-800"
+          className="ml-2 rounded px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800"
           title="Close (Esc)"
         >
           Close
@@ -69,7 +69,7 @@ export function DetailViewer({ file, onClose }: Props) {
 
       <div className="min-h-0 flex-1">
         {error ? (
-          <div className="flex h-full items-center justify-center p-6 text-center text-sm text-red-400">
+          <div className="flex h-full items-center justify-center p-6 text-center text-sm text-red-600 dark:text-red-400">
             Failed to load mesh: {error}
           </div>
         ) : (
@@ -113,8 +113,8 @@ function ToggleButton({
       className={
         "rounded px-2 py-1 text-xs transition-colors " +
         (active
-          ? "bg-indigo-500/30 text-indigo-100"
-          : "text-neutral-300 hover:bg-neutral-800")
+          ? "bg-indigo-500/30 text-indigo-900 dark:text-indigo-100"
+          : "text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800")
       }
       title={`${label} (${hint})`}
     >
