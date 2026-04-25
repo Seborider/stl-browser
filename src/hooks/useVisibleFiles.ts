@@ -27,6 +27,19 @@ export function useVisibleFiles(): FileEntry[] {
         if (cancelled) return;
         if (activeLibraryId != null) {
           setLibraryFiles(activeLibraryId, rows);
+        } else {
+          // "All Files": fan rows out into per-library buckets so the
+          // flattened view below can read them, and so live `files:added`
+          // merges keep working through the existing per-library store.
+          const grouped = new Map<number, FileEntry[]>();
+          for (const row of rows) {
+            const bucket = grouped.get(row.libraryId);
+            if (bucket) bucket.push(row);
+            else grouped.set(row.libraryId, [row]);
+          }
+          for (const [libId, libRows] of grouped) {
+            setLibraryFiles(libId, libRows);
+          }
         }
       })
       .catch((err) => {
@@ -41,10 +54,12 @@ export function useVisibleFiles(): FileEntry[] {
   // rows sort correctly without a new backend round-trip. The backend's order
   // is authoritative on initial load; the merged view replays the same sort.
   return useMemo(() => {
-    if (activeLibraryId == null) return [];
-    const bucket = filesByLibrary[activeLibraryId];
-    if (!bucket) return [];
-    const all = Object.values(bucket);
+    const all =
+      activeLibraryId == null
+        ? Object.values(filesByLibrary).flatMap((bucket) =>
+            Object.values(bucket),
+          )
+        : Object.values(filesByLibrary[activeLibraryId] ?? {});
     const q = search.trim().toLowerCase();
     const filtered = q
       ? all.filter((f) => f.name.toLowerCase().includes(q))
