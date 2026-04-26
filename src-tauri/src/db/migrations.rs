@@ -64,6 +64,14 @@ const MIGRATIONS: &[&str] = &[
     );
     CREATE INDEX idx_thumbnails_generated ON thumbnails(generated_at);
     "#,
+    // v4 — key/value settings table for user preferences (PLAN.md §4).
+    // Currently holds the theme override; opaque text values per key.
+    r#"
+    CREATE TABLE settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+    "#,
 ];
 
 pub fn run(conn: &mut Connection) -> Result<(), IpcError> {
@@ -120,7 +128,7 @@ mod tests {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        assert_eq!(versions, vec![1, 2, 3]);
+        assert_eq!(versions, vec![1, 2, 3, 4]);
 
         // files + mesh_metadata + thumbnails exist
         let has = |t: &str| -> bool {
@@ -134,6 +142,7 @@ mod tests {
         assert!(has("files"));
         assert!(has("mesh_metadata"));
         assert!(has("thumbnails"));
+        assert!(has("settings"));
     }
 
     #[test]
@@ -156,7 +165,7 @@ mod tests {
         let max: i64 = conn
             .query_row("SELECT MAX(version) FROM schema_version", [], |r| r.get(0))
             .unwrap();
-        assert_eq!(max, 3);
+        assert_eq!(max, 4);
     }
 
     #[test]

@@ -17,6 +17,7 @@ pub const FILES_UPDATED: &str = "files:updated";
 pub const METADATA_READY: &str = "metadata:ready";
 pub const THUMBNAILS_NEEDED: &str = "thumbnails:needed";
 pub const THUMBNAILS_READY: &str = "thumbnails:ready";
+pub const THEME_CHANGED: &str = "theme:changed";
 
 // `Emitter` is Tauri 2's trait that puts `.emit` on AppHandle. Errors are
 // logged and swallowed — emit failures mean the webview is gone, in which
@@ -78,4 +79,8 @@ pub fn thumbnails_ready(
             file_ids,
         },
     );
+}
+
+pub fn theme_changed(app: &AppHandle, mode: crate::types::ThemeMode) {
+    let _ = app.emit(THEME_CHANGED, crate::types::ThemeChangedEvent { mode });
 }

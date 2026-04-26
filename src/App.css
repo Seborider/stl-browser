@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Override Tailwind v4's default `dark:` variant (which keys off
+   prefers-color-scheme) so it instead matches when `.dark` is on the html
+   element or any ancestor. This lets the user override the OS theme via the
+   menu-bar Theme menu. When the override is "system" we add/remove the class
+   to track prefers-color-scheme from the renderer. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 html,
 body,
 #root {
@@ -33,11 +40,10 @@ body {
   background-color: rgba(0, 0, 0, 0.28);
 }
 
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.12);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.22);
-  }
+:where(html.dark) ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+:where(html.dark) ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.22);
 }

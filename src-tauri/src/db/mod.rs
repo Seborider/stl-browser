@@ -8,6 +8,7 @@ pub mod files;
 pub mod libraries;
 pub mod mesh;
 pub mod migrations;
+pub mod settings;
 pub mod thumbnails;
 
 // Opens (or creates) the SQLite file, enables sensible pragmas, and applies

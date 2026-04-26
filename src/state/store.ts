@@ -1,9 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SortKey, SortDirection } from "../generated";
+import type { SortKey, SortDirection, ThemeMode } from "../generated";
 
-export type { SortKey, SortDirection };
+export type { SortKey, SortDirection, ThemeMode };
 export type GridSize = "sm" | "md" | "lg" | "xl";
+
+// Mirrored verbatim by the inline bootstrap in index.html — keep them in sync.
+export const THEME_LS_KEY = "stl-browser:theme";
 
 export interface PaneWidths {
   sidebar: number;
@@ -18,6 +21,7 @@ interface AppState {
   sortDirection: SortDirection;
   search: string;
   gridSize: GridSize;
+  themeMode: ThemeMode;
   paneWidths: PaneWidths;
 
   setActiveLibrary: (id: number | null) => void;
@@ -27,6 +31,7 @@ interface AppState {
   toggleSortDirection: () => void;
   setSearch: (q: string) => void;
   setGridSize: (size: GridSize) => void;
+  setThemeMode: (mode: ThemeMode) => void;
   setPaneWidth: (pane: keyof PaneWidths, width: number) => void;
 }
 
@@ -42,6 +47,7 @@ export const useAppStore = create<AppState>()(
       sortDirection: "asc",
       search: "",
       gridSize: "md",
+      themeMode: "system",
       paneWidths: DEFAULT_PANES,
 
       setActiveLibrary: (id) =>
@@ -59,6 +65,14 @@ export const useAppStore = create<AppState>()(
         })),
       setSearch: (q) => set({ search: q, selectedFileId: null }),
       setGridSize: (size) => set({ gridSize: size }),
+      setThemeMode: (mode) =>
+        set((s) => {
+          if (s.themeMode === mode) return s;
+          try {
+            localStorage.setItem(THEME_LS_KEY, mode);
+          } catch {}
+          return { themeMode: mode };
+        }),
       setPaneWidth: (pane, width) =>
         set((s) => ({ paneWidths: { ...s.paneWidths, [pane]: width } })),
     }),

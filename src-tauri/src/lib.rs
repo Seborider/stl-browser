@@ -20,6 +20,28 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .on_menu_event(|app, event| {
+            use crate::types::ThemeMode;
+            let mode = match event.id().0.as_str() {
+                "theme:system" => ThemeMode::System,
+                "theme:light" => ThemeMode::Light,
+                "theme:dark" => ThemeMode::Dark,
+                _ => return,
+            };
+            let state: tauri::State<std::sync::Arc<crate::state::AppState>> =
+                app.state();
+            if let Ok(conn) = state.db.lock() {
+                let _ = crate::db::settings::set_theme_mode(&conn, mode);
+            }
+            if let Ok(handles) = state.theme_menu.lock() {
+                if let Some(h) = handles.as_ref() {
+                    let _ = h.system.set_checked(mode == ThemeMode::System);
+                    let _ = h.light.set_checked(mode == ThemeMode::Light);
+                    let _ = h.dark.set_checked(mode == ThemeMode::Dark);
+                }
+            }
+            crate::events::theme_changed(app, mode);
+        })
         // `setup` runs once on startup with access to the app handle. We use
         // it to resolve the per-app data dir, open SQLite, apply migrations,
         // then register the connection as shared state.
@@ -70,6 +92,70 @@ pub fn run() {
                     }
                 }
             }
+            // ---- theme menu ----
+            let initial_mode = {
+                let conn = state
+                    .db
+                    .lock()
+                    .map_err(|e| format!("db mutex poisoned: {e}"))?;
+                crate::db::settings::get_theme_mode(&conn)
+                    .map_err(|e| e.to_string())?
+            };
+
+            use tauri::menu::{CheckMenuItemBuilder, Menu, SubmenuBuilder};
+            let item_system = CheckMenuItemBuilder::with_id("theme:system", "System")
+                .checked(initial_mode == crate::types::ThemeMode::System)
+                .build(app)?;
+            let item_light = CheckMenuItemBuilder::with_id("theme:light", "Light")
+                .checked(initial_mode == crate::types::ThemeMode::Light)
+                .build(app)?;
+            let item_dark = CheckMenuItemBuilder::with_id("theme:dark", "Dark")
+                .checked(initial_mode == crate::types::ThemeMode::Dark)
+                .build(app)?;
+
+            let theme_submenu = SubmenuBuilder::new(app, "Theme")
+                .item(&item_system)
+                .item(&item_light)
+                .item(&item_dark)
+                .build()?;
+
+            let menu = Menu::default(app.handle())?;
+            menu.append(&theme_submenu)?;
+            app.set_menu(menu)?;
+
+            *state
+                .theme_menu
+                .lock()
+                .map_err(|e| format!("theme_menu mutex poisoned: {e}"))? =
+                Some(crate::state::ThemeMenuHandles {
+                    system: item_system,
+                    light: item_light,
+                    dark: item_dark,
+                });
+
+            // ---- apply theme to the native window background ----
+            // Avoids the dark-flash when the user is in light mode and Tauri
+            // would otherwise paint the WKWebView container dark before the
+            // first frame.
+            if let Some(window) = app.get_webview_window("main") {
+                let resolved_dark = match initial_mode {
+                    crate::types::ThemeMode::Dark => true,
+                    crate::types::ThemeMode::Light => false,
+                    // System: we can't read prefers-color-scheme from Rust;
+                    // pick the OS theme via Tauri's Window API.
+                    crate::types::ThemeMode::System => window
+                        .theme()
+                        .map(|t| t == tauri::Theme::Dark)
+                        .unwrap_or(true),
+                };
+                let bg = if resolved_dark {
+                    tauri::window::Color(10, 10, 10, 255)
+                } else {
+                    tauri::window::Color(255, 255, 255, 255)
+                };
+                let _ = window.set_background_color(Some(bg));
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -84,6 +170,7 @@ pub fn run() {
             ipc::thumbnails::get_thumbnail_cache_dir,
             ipc::thumbnails::list_thumbnail_keys,
             ipc::system::reveal_in_finder,
+            ipc::system::get_theme_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

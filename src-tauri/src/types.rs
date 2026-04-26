@@ -196,3 +196,24 @@ pub struct ThumbnailsReadyEvent {
     #[ts(type = "number[]")]
     pub file_ids: Vec<i64>,
 }
+
+// ---- theme override ----
+
+// Lowercase serde rename so JSON values match the strings the renderer stores
+// in localStorage and reads from the bootstrap inline script in index.html.
+// Don't change the wire format without updating index.html and state/store.ts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeMode {
+    System,
+    Light,
+    Dark,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct ThemeChangedEvent {
+    pub mode: ThemeMode,
+}

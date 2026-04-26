@@ -1,7 +1,10 @@
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
 
+use crate::db;
 use crate::error::IpcError;
+use crate::state::AppState;
+use crate::types::ThemeMode;
 
 /// Reveal a file in Finder via `open -R <abs_path>`.
 ///
@@ -27,4 +30,15 @@ pub async fn reveal_in_finder(app: AppHandle, path: String) -> Result<(), IpcErr
         .await
         .map_err(|e| IpcError::Io(format!("open -R failed: {e}")))?;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_theme_mode(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+) -> Result<ThemeMode, IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    db::settings::get_theme_mode(&conn)
 }

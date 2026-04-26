@@ -190,7 +190,7 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
 
 ### Phase 7 — macOS polish (1–2 days)
 - Vibrancy sidebar via `tauri-plugin-window-vibrancy` or manual `NSVisualEffectView` config.
-- Dark mode follows system (`window-theme: null` in Tauri config + `prefers-color-scheme` in CSS).
+- Dark mode follows system by default. The OS theme can be overridden via a native macOS menu-bar **Theme** submenu (System / Light / Dark) built with `tauri::menu::{SubmenuBuilder, CheckMenuItemBuilder}`. The choice persists in a SQLite `settings` key/value table (migration v4) and is applied via Tailwind v4's class-based dark variant — `@custom-variant dark (&:where(.dark, .dark *))` in `src/App.css` — toggled by the `useTheme` hook on `<html>`. An inline bootstrap `<script>` in `index.html` reads the mirrored `localStorage["stl-browser:theme"]` value and applies the class before React mounts to avoid a first-paint flash; the runtime `window.set_background_color` call in `lib.rs::setup` does the same for the WKWebView container.
 - "Reveal in Finder" via `tauri-plugin-shell` → `open -R <path>`.
 - System fonts: Tailwind `font-sans` defaults to SF Pro on macOS.
 - Keyboard: space for quick preview (a la Finder).
@@ -681,6 +681,6 @@ Run each phase's check before starting the next.
 
 1. **Minimum macOS version** — plan assumes 12.0 (Monterey). Bump to 13 if you want newer APIs.
 2. **Print bed default size** — plan uses 220×220mm (Prusa MK-series default). Will be a user-editable setting regardless.
-3. **Settings storage** — SQLite `settings` table (plan) vs a JSON file. Plan uses SQLite.
+3. **Settings storage** — SQLite `settings` table (added in migration v4 alongside the theme override). JSON value column for forward compatibility.
 
 ---

@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use rusqlite::Connection;
+use tauri::menu::CheckMenuItem;
+use tauri::Wry;
 
 use crate::scan::watcher::WatcherHandle;
 
@@ -16,6 +18,16 @@ pub struct AppState {
     // Per-library watcher handles. Dropping a handle (via `remove`) stops the
     // underlying notify watch; we keep them alive here for the app's lifetime.
     pub watchers: Mutex<HashMap<i64, WatcherHandle>>,
+    // Handles to the three CheckMenuItems in the Theme submenu, set during
+    // setup. Stored so on_menu_event can flip the checkmarks atomically when
+    // the user picks an option. `Wry` is Tauri's default webview runtime.
+    pub theme_menu: Mutex<Option<ThemeMenuHandles>>,
+}
+
+pub struct ThemeMenuHandles {
+    pub system: CheckMenuItem<Wry>,
+    pub light: CheckMenuItem<Wry>,
+    pub dark: CheckMenuItem<Wry>,
 }
 
 impl AppState {
@@ -23,6 +35,7 @@ impl AppState {
         Arc::new(Self {
             db: Mutex::new(conn),
             watchers: Mutex::new(HashMap::new()),
+            theme_menu: Mutex::new(None),
         })
     }
 }

@@ -4,6 +4,7 @@ import type {
   FileEntry,
   FileQuery,
   Library,
+  ThemeMode,
 } from "../generated";
 
 // Thin, typed wrappers over Tauri's `invoke`. Keep these dumb so the hooks /
@@ -69,4 +70,8 @@ export function listThumbnailKeys(): Promise<string[]> {
 
 export function revealInFinder(path: string): Promise<void> {
   return invoke<void>("reveal_in_finder", { path });
+}
+
+export function getThemeMode(): Promise<ThemeMode> {
+  return invoke<ThemeMode>("get_theme_mode");
 }

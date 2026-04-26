@@ -6,6 +6,7 @@ import type {
   ScanErrorEvent,
   ScanProgressEvent,
   ScanStartedEvent,
+  ThemeChangedEvent,
   ThumbnailsNeededEvent,
   ThumbnailsReadyEvent,
 } from "../generated";
@@ -20,6 +21,7 @@ export const FILES_ADDED = "files:added";
 export const METADATA_READY = "metadata:ready";
 export const THUMBNAILS_NEEDED = "thumbnails:needed";
 export const THUMBNAILS_READY = "thumbnails:ready";
+export const THEME_CHANGED = "theme:changed";
 
 export function onScanStarted(cb: (e: ScanStartedEvent) => void): Promise<UnlistenFn> {
   return listen<ScanStartedEvent>(SCAN_STARTED, (ev) => cb(ev.payload));
@@ -44,4 +46,7 @@ export function onThumbnailsNeeded(cb: (e: ThumbnailsNeededEvent) => void): Prom
 }
 export function onThumbnailsReady(cb: (e: ThumbnailsReadyEvent) => void): Promise<UnlistenFn> {
   return listen<ThumbnailsReadyEvent>(THUMBNAILS_READY, (ev) => cb(ev.payload));
+}
+export function onThemeChanged(cb: (e: ThemeChangedEvent) => void): Promise<UnlistenFn> {
+  return listen<ThemeChangedEvent>(THEME_CHANGED, (ev) => cb(ev.payload));
 }

@@ -21,7 +21,7 @@ export function GridSizeSlider() {
       <div
         role="group"
         aria-label="Grid size"
-        className="flex items-center rounded-md border border-neutral-800 bg-neutral-900 p-0.5"
+        className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900"
       >
         {STEPS.map((step, i) => (
           <button
@@ -33,8 +33,8 @@ export function GridSizeSlider() {
             className={
               "flex h-6 items-center justify-center rounded-[5px] px-2 text-[11px] font-medium transition-colors " +
               (gridSize === step
-                ? "bg-neutral-700/70 text-white"
-                : "text-neutral-400 hover:text-neutral-200")
+                ? "bg-neutral-200 text-neutral-900 dark:bg-neutral-700/70 dark:text-white"
+                : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200")
             }
           >
             <span

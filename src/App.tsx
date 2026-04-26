@@ -14,6 +14,7 @@ import { useLibraries } from "./hooks/useLibraries";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useLiveEvents } from "./hooks/useLiveEvents";
 import { useThumbnailBackfill } from "./hooks/useThumbnailBackfill";
+import { useTheme } from "./hooks/useTheme";
 import { clamp } from "./hooks/useResizablePanes";
 import "./App.css";
 
@@ -29,6 +30,7 @@ function App() {
   const viewerFileId = useAppStore((s) => s.viewerFileId);
   const setViewerFileId = useAppStore((s) => s.setViewerFileId);
 
+  useTheme();
   useLiveEvents();
 
   const files = useVisibleFiles();
