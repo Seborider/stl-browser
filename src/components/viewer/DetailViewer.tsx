@@ -20,14 +20,9 @@ export function DetailViewer({ file, onClose }: Props) {
 
   useEffect(() => setError(null), [file.id]);
 
-  // Scoped to the viewer's lifetime so the grid's own Escape handling isn't
-  // clobbered while the viewer is closed.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      } else if (e.key.toLowerCase() === "w") {
+      if (e.key.toLowerCase() === "w") {
         setWireframe((v) => !v);
       } else if (e.key.toLowerCase() === "s") {
         setFlatShading((v) => !v);
@@ -35,7 +30,7 @@ export function DetailViewer({ file, onClose }: Props) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   const handleError = useCallback((msg: string) => setError(msg), []);
 

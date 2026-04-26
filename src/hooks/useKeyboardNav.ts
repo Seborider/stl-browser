@@ -85,6 +85,20 @@ export function useKeyboardNav({
         return;
       }
 
+      if (e.key === "Escape") {
+        if (viewerFileId !== null) {
+          e.preventDefault();
+          setViewerFileId(null);
+          return;
+        }
+        if (selectedFileId !== null) {
+          e.preventDefault();
+          setSelectedFile(null);
+          return;
+        }
+        return;
+      }
+
       if (files.length === 0) return;
 
       const currentIndex = selectedFileId !== null
@@ -121,12 +135,6 @@ export function useKeyboardNav({
           if (currentIndex >= 0) {
             e.preventDefault();
             focusInspector();
-          }
-          break;
-        case "Escape":
-          if (selectedFileId !== null) {
-            e.preventDefault();
-            setSelectedFile(null);
           }
           break;
       }
