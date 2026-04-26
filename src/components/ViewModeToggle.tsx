@@ -1,23 +1,25 @@
+import { useTranslation } from "react-i18next";
 import { useAppStore, type ViewMode } from "../state/store";
 
 const MODES: ViewMode[] = ["grid", "list"];
-const LABELS: Record<ViewMode, string> = {
-  grid: "Grid",
-  list: "List",
+const LABEL_KEYS: Record<ViewMode, "toolbar.viewGrid" | "toolbar.viewList"> = {
+  grid: "toolbar.viewGrid",
+  list: "toolbar.viewList",
 };
 
 export function ViewModeToggle() {
+  const { t } = useTranslation();
   const viewMode = useAppStore((s) => s.viewMode);
   const setViewMode = useAppStore((s) => s.setViewMode);
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] uppercase tracking-wider text-neutral-500">
-        View
+        {t("toolbar.view")}
       </span>
       <div
         role="group"
-        aria-label="View mode"
+        aria-label={t("toolbar.viewMode")}
         className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900"
       >
         {MODES.map((mode) => (
@@ -26,7 +28,7 @@ export function ViewModeToggle() {
             type="button"
             onClick={() => setViewMode(mode)}
             aria-pressed={viewMode === mode}
-            title={LABELS[mode]}
+            title={t(LABEL_KEYS[mode])}
             className={
               "flex h-6 items-center justify-center rounded-[5px] px-2 text-[11px] font-medium transition-colors " +
               (viewMode === mode

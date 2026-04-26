@@ -1,6 +1,7 @@
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {
   FilesAddedEvent,
+  LanguageChangedEvent,
   MetadataReadyEvent,
   ScanCompletedEvent,
   ScanErrorEvent,
@@ -22,6 +23,7 @@ export const METADATA_READY = "metadata:ready";
 export const THUMBNAILS_NEEDED = "thumbnails:needed";
 export const THUMBNAILS_READY = "thumbnails:ready";
 export const THEME_CHANGED = "theme:changed";
+export const LANGUAGE_CHANGED = "language:changed";
 
 export function onScanStarted(cb: (e: ScanStartedEvent) => void): Promise<UnlistenFn> {
   return listen<ScanStartedEvent>(SCAN_STARTED, (ev) => cb(ev.payload));
@@ -49,4 +51,7 @@ export function onThumbnailsReady(cb: (e: ThumbnailsReadyEvent) => void): Promis
 }
 export function onThemeChanged(cb: (e: ThemeChangedEvent) => void): Promise<UnlistenFn> {
   return listen<ThemeChangedEvent>(THEME_CHANGED, (ev) => cb(ev.payload));
+}
+export function onLanguageChanged(cb: (e: LanguageChangedEvent) => void): Promise<UnlistenFn> {
+  return listen<LanguageChangedEvent>(LANGUAGE_CHANGED, (ev) => cb(ev.payload));
 }

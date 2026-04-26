@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import type { FileEntry } from "../generated";
 import { useAppStore } from "../state/store";
@@ -44,13 +45,14 @@ export function List({ files, virtuosoRef, onRangeChanged, onActivate }: Props) 
 }
 
 function ListHeader() {
+  const { t } = useTranslation();
   return (
     <div className="flex h-7 shrink-0 items-center gap-3 border-b border-neutral-200/70 bg-neutral-50/80 px-3 text-[10.5px] font-medium uppercase tracking-wider text-neutral-500 dark:border-neutral-800/70 dark:bg-neutral-900/40">
       <div className="w-6 shrink-0" />
-      <div className="min-w-0 flex-1">Name</div>
-      <div className="w-12 shrink-0 text-right">Type</div>
-      <div className="w-16 shrink-0 text-right">Size</div>
-      <div className="w-24 shrink-0 text-right">Modified</div>
+      <div className="min-w-0 flex-1">{t("list.name")}</div>
+      <div className="w-12 shrink-0 text-right">{t("list.type")}</div>
+      <div className="w-16 shrink-0 text-right">{t("list.size")}</div>
+      <div className="w-24 shrink-0 text-right">{t("list.modified")}</div>
     </div>
   );
 }
@@ -101,9 +103,10 @@ function ListRowInner({ file, selected, onSelect, onActivate }: RowProps) {
 const ListRow = memo(ListRowInner);
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full items-center justify-center p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-      No files yet. Add a library folder to get started — scanning lands in Phase 3.
+      {t("list.empty")}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { VirtuosoGrid, type VirtuosoGridHandle } from "react-virtuoso";
 import type { FileEntry } from "../generated";
 import { useAppStore, type GridSize } from "../state/store";
@@ -120,9 +121,10 @@ export function Grid({
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full items-center justify-center p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-      No files yet. Add a library folder to get started — scanning lands in Phase 3.
+      {t("grid.empty")}
     </div>
   );
 }

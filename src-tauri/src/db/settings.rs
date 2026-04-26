@@ -1,9 +1,10 @@
 use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::error::IpcError;
-use crate::types::ThemeMode;
+use crate::types::{Language, ThemeMode};
 
 const KEY_THEME_MODE: &str = "theme_mode";
+const KEY_LANGUAGE: &str = "language";
 
 // Returns the persisted theme override, defaulting to System when no row
 // exists (fresh install) or the value can't be parsed (forward-compat or
@@ -28,6 +29,30 @@ pub fn set_theme_mode(conn: &Connection, mode: ThemeMode) -> Result<(), IpcError
     Ok(())
 }
 
+// Returns `Some(lang)` if the user (or first-launch detection) has stored a
+// preference, `None` for a fresh DB. The caller distinguishes these cases:
+// `None` triggers OS-locale detection in setup; once a value is written we
+// trust it on every subsequent boot.
+pub fn get_language(conn: &Connection) -> Result<Option<Language>, IpcError> {
+    let raw: Option<String> = conn
+        .query_row(
+            "SELECT value FROM settings WHERE key = ?1",
+            params![KEY_LANGUAGE],
+            |row| row.get(0),
+        )
+        .optional()?;
+    Ok(raw.as_deref().and_then(parse_language))
+}
+
+pub fn set_language(conn: &Connection, lang: Language) -> Result<(), IpcError> {
+    conn.execute(
+        "INSERT INTO settings (key, value) VALUES (?1, ?2)\n\
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        params![KEY_LANGUAGE, language_to_str(lang)],
+    )?;
+    Ok(())
+}
+
 fn theme_to_str(mode: ThemeMode) -> &'static str {
     match mode {
         ThemeMode::System => "system",
@@ -41,6 +66,23 @@ fn parse_theme(s: Option<&str>) -> Option<ThemeMode> {
         "system" => Some(ThemeMode::System),
         "light" => Some(ThemeMode::Light),
         "dark" => Some(ThemeMode::Dark),
+        _ => None,
+    }
+}
+
+fn language_to_str(lang: Language) -> &'static str {
+    match lang {
+        Language::System => "system",
+        Language::En => "en",
+        Language::De => "de",
+    }
+}
+
+fn parse_language(s: &str) -> Option<Language> {
+    match s {
+        "system" => Some(Language::System),
+        "en" => Some(Language::En),
+        "de" => Some(Language::De),
         _ => None,
     }
 }
@@ -84,5 +126,33 @@ mod tests {
         )
         .unwrap();
         assert_eq!(get_theme_mode(&conn).unwrap(), ThemeMode::System);
+    }
+
+    #[test]
+    fn fresh_db_returns_no_language() {
+        let conn = open_memory();
+        assert!(get_language(&conn).unwrap().is_none());
+    }
+
+    #[test]
+    fn round_trip_languages() {
+        let conn = open_memory();
+        set_language(&conn, Language::De).unwrap();
+        assert_eq!(get_language(&conn).unwrap(), Some(Language::De));
+        set_language(&conn, Language::En).unwrap();
+        assert_eq!(get_language(&conn).unwrap(), Some(Language::En));
+        set_language(&conn, Language::System).unwrap();
+        assert_eq!(get_language(&conn).unwrap(), Some(Language::System));
+    }
+
+    #[test]
+    fn unknown_language_returns_none() {
+        let conn = open_memory();
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES ('language', 'fr')",
+            [],
+        )
+        .unwrap();
+        assert_eq!(get_language(&conn).unwrap(), None);
     }
 }

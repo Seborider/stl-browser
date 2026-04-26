@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { Library } from "../generated";
 import { useAppStore } from "../state/store";
@@ -6,6 +7,7 @@ import { useLibraries } from "../hooks/useLibraries";
 import { addLibrary, removeLibrary } from "../ipc/commands";
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const activeLibraryId = useAppStore((s) => s.activeLibraryId);
   const setActiveLibrary = useAppStore((s) => s.setActiveLibrary);
   const { libraries, loading, error, refresh } = useLibraries();
@@ -32,7 +34,7 @@ export function Sidebar() {
   const handleRemove = async (lib: Library) => {
     if (busy) return;
     const confirmed = window.confirm(
-      `Remove "${lib.name}" from STL Browser?\n\nFiles on disk are not touched.`,
+      t("sidebar.confirmRemove", { name: lib.name }),
     );
     if (!confirmed) return;
     setMessage(null);
@@ -52,21 +54,21 @@ export function Sidebar() {
     <aside className="flex h-full flex-col overflow-hidden bg-neutral-50 text-sm dark:bg-neutral-900">
       <div className="flex items-center justify-between px-4 pt-5 pb-2">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-500">
-          Libraries
+          {t("sidebar.libraries")}
         </span>
         <button
           type="button"
           onClick={handleAdd}
           disabled={busy}
           className="rounded-md border border-neutral-300 bg-white/70 px-2 py-0.5 text-[11px] text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-neutral-700 dark:hover:text-white"
-          title="Add a library folder">
-          + Add
+          title={t("sidebar.addLibrary")}>
+          {t("sidebar.addShort")}
         </button>
       </div>
 
       <nav className="flex flex-col gap-0.5 overflow-y-auto px-2">
         <SidebarItem
-          label="All Files"
+          label={t("sidebar.allFiles")}
           active={activeLibraryId === null}
           onClick={() => setActiveLibrary(null)}
         />
@@ -81,8 +83,10 @@ export function Sidebar() {
         ))}
         {!loading && libraries.length === 0 && (
           <p className="px-3 py-2 text-[11px] text-neutral-500">
-            No libraries yet. Click{" "}
-            <span className="text-neutral-300">+ Add</span> to pick a folder.
+            <Trans
+              i18nKey="sidebar.empty"
+              components={{ span: <span className="text-neutral-300" /> }}
+            />
           </p>
         )}
         {error && <p className="px-3 py-2 text-[11px] text-red-400">{error}</p>}
@@ -92,7 +96,7 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto border-t border-neutral-200/70 px-4 py-3 text-[11px] text-neutral-500 dark:border-neutral-800/70">
-        Phase 7 · macOS polish
+        {t("sidebar.footer")}
       </div>
     </aside>
   );
@@ -106,6 +110,7 @@ interface ItemProps {
 }
 
 function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={
@@ -132,8 +137,8 @@ function SidebarItem({ label, active, onClick, onRemove }: ItemProps) {
             e.stopPropagation();
             onRemove();
           }}
-          aria-label={`Remove ${label}`}
-          title={`Remove ${label}`}
+          aria-label={t("sidebar.remove", { name: label })}
+          title={t("sidebar.remove", { name: label })}
           className="mr-1 rounded px-1.5 text-[13px] leading-none text-neutral-500 opacity-0 transition hover:text-red-500 group-hover:opacity-100 dark:hover:text-red-400">
           ×
         </button>

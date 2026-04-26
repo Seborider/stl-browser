@@ -1,0 +1,66 @@
+{
+  "toolbar": {
+    "search": "Search files…",
+    "sort": "Sort",
+    "sortAscending": "Sort ascending",
+    "sortDescending": "Sort descending",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "view": "View",
+    "viewMode": "View mode",
+    "size": "Size",
+    "gridSize": "Grid size",
+    "gridSm": "Small",
+    "gridMd": "Medium",
+    "gridLg": "Large",
+    "gridXl": "X-Large",
+    "viewGrid": "Grid",
+    "viewList": "List",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files"
+  },
+  "sidebar": {
+    "libraries": "Libraries",
+    "addLibrary": "Add a library folder",
+    "addShort": "+ Add",
+    "allFiles": "All Files",
+    "empty": "No libraries yet. Click <span>+ Add</span> to pick a folder.",
+    "remove": "Remove {{name}}",
+    "confirmRemove": "Remove \"{{name}}\" from STL Browser?\n\nFiles on disk are not touched.",
+    "footer": "Phase 7.5 · i18n"
+  },
+  "list": {
+    "name": "Name",
+    "type": "Type",
+    "size": "Size",
+    "modified": "Modified",
+    "empty": "No files yet. Add a library folder to get started."
+  },
+  "grid": {
+    "empty": "No files yet. Add a library folder to get started."
+  },
+  "inspector": {
+    "title": "Inspector",
+    "noFile": "No file selected",
+    "pickHint": "Pick a tile in the grid to inspect its metadata.",
+    "library": "Library",
+    "format": "Format",
+    "size": "Size",
+    "modified": "Modified",
+    "revealInFinder": "Reveal in Finder",
+    "triangles": "Triangles",
+    "dimensions": "Size (mm)",
+    "surfaceArea": "Surface area",
+    "volume": "Volume",
+    "notWatertight": "— (not watertight)",
+    "parseFailed": "Parse failed: {{reason}}",
+    "parsing": "Parsing mesh…"
+  },
+  "viewer": {
+    "wireframe": "Wireframe",
+    "smooth": "Smooth",
+    "close": "Close",
+    "closeHint": "Close (Esc)",
+    "loadFailed": "Failed to load mesh: {{reason}}"
+  }
+}

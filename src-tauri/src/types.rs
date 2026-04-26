@@ -211,9 +211,76 @@ pub enum ThemeMode {
     Dark,
 }
 
+impl ThemeMode {
+    pub fn menu_id(self) -> &'static str {
+        match self {
+            ThemeMode::System => "theme:system",
+            ThemeMode::Light => "theme:light",
+            ThemeMode::Dark => "theme:dark",
+        }
+    }
+
+    pub fn from_menu_id(id: &str) -> Option<Self> {
+        match id {
+            "theme:system" => Some(ThemeMode::System),
+            "theme:light" => Some(ThemeMode::Light),
+            "theme:dark" => Some(ThemeMode::Dark),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct ThemeChangedEvent {
     pub mode: ThemeMode,
+}
+
+// ---- language override ----
+
+// Lowercase serde rename keeps wire values stable as plain strings ("system"
+// / "en" / "de") and matches the language tags used by react-i18next on the
+// frontend, so the same payload travels end-to-end without remapping.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "lowercase")]
+pub enum Language {
+    System,
+    En,
+    De,
+}
+
+impl Language {
+    pub fn menu_id(self) -> &'static str {
+        match self {
+            Language::System => "language:system",
+            Language::En => "language:en",
+            Language::De => "language:de",
+        }
+    }
+
+    pub fn from_menu_id(id: &str) -> Option<Self> {
+        match id {
+            "language:system" => Some(Language::System),
+            "language:en" => Some(Language::En),
+            "language:de" => Some(Language::De),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct Preferences {
+    pub theme: ThemeMode,
+    pub language: Language,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
+pub struct LanguageChangedEvent {
+    pub language: Language,
 }

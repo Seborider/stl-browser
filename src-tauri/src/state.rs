@@ -15,13 +15,11 @@ use crate::scan::watcher::WatcherHandle;
 //     its own so this is the cheapest correct choice until contention shows up.
 pub struct AppState {
     pub db: Mutex<Connection>,
-    // Per-library watcher handles. Dropping a handle (via `remove`) stops the
-    // underlying notify watch; we keep them alive here for the app's lifetime.
     pub watchers: Mutex<HashMap<i64, WatcherHandle>>,
-    // Handles to the three CheckMenuItems in the Theme submenu, set during
-    // setup. Stored so on_menu_event can flip the checkmarks atomically when
-    // the user picks an option. `Wry` is Tauri's default webview runtime.
-    pub theme_menu: Mutex<Option<ThemeMenuHandles>>,
+    // Theme `CheckMenuItem` handles, used by `on_menu_event` to flip
+    // checkmarks. Language items are rebuilt wholesale on language change,
+    // so they're not retained here.
+    pub menu_handles: Mutex<Option<ThemeMenuHandles>>,
 }
 
 pub struct ThemeMenuHandles {
@@ -35,7 +33,7 @@ impl AppState {
         Arc::new(Self {
             db: Mutex::new(conn),
             watchers: Mutex::new(HashMap::new()),
-            theme_menu: Mutex::new(None),
+            menu_handles: Mutex::new(None),
         })
     }
 }

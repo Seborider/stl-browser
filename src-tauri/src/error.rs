@@ -22,6 +22,9 @@ pub enum IpcError {
 
     #[error("invalid: {0}")]
     Invalid(String),
+
+    #[error("internal: {0}")]
+    Internal(String),
 }
 
 // `#[from]` would work but rusqlite constraint violations deserve the more

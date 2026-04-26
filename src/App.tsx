@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { VirtuosoGridHandle, VirtuosoHandle } from "react-virtuoso";
 import { Sidebar } from "./components/Sidebar";
 import { Grid } from "./components/Grid";
@@ -17,6 +18,7 @@ import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useLiveEvents } from "./hooks/useLiveEvents";
 import { useThumbnailBackfill } from "./hooks/useThumbnailBackfill";
 import { useTheme } from "./hooks/useTheme";
+import { useLanguage } from "./hooks/useLanguage";
 import { clamp } from "./hooks/useResizablePanes";
 import "./App.css";
 
@@ -34,6 +36,7 @@ function App() {
   const viewMode = useAppStore((s) => s.viewMode);
 
   useTheme();
+  useLanguage();
   useLiveEvents();
 
   const files = useVisibleFiles();
@@ -144,6 +147,7 @@ function App() {
 }
 
 function Toolbar({ count, viewMode }: { count: number; viewMode: ViewMode }) {
+  const { t } = useTranslation();
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-neutral-200/70 bg-neutral-50/80 px-3 dark:border-neutral-800/70 dark:bg-neutral-900/40">
       <SearchBox />
@@ -158,7 +162,7 @@ function Toolbar({ count, viewMode }: { count: number; viewMode: ViewMode }) {
         </>
       )}
       <div className="ml-auto text-[11px] tabular-nums text-neutral-500">
-        {count.toLocaleString()} {count === 1 ? "file" : "files"}
+        {t("toolbar.fileCount", { count })}
       </div>
     </header>
   );

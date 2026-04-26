@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { getThemeMode } from "../ipc/commands";
 import { onThemeChanged } from "../ipc/events";
 import { useAppStore } from "../state/store";
 
@@ -12,23 +11,12 @@ function applyResolved(dark: boolean) {
 }
 
 // Toggles the `.dark` class on <html>. The inline bootstrap in index.html
-// has already done a best-effort pre-paint apply from localStorage; this hook
-// reconciles against SQLite (source of truth) and reacts to menu choices.
+// has already done a best-effort pre-paint apply from localStorage and
+// `main.tsx` seeded the store from SQLite before mount; this hook reacts to
+// menu choices (theme:changed) and OS prefers-color-scheme flips.
 export function useTheme(): void {
   const themeMode = useAppStore((s) => s.themeMode);
   const setThemeMode = useAppStore((s) => s.setThemeMode);
-
-  useEffect(() => {
-    let cancelled = false;
-    getThemeMode()
-      .then((mode) => {
-        if (!cancelled) setThemeMode(mode);
-      })
-      .catch((err) => console.error("get_theme_mode failed", err));
-    return () => {
-      cancelled = true;
-    };
-  }, [setThemeMode]);
 
   useEffect(() => {
     let cancelled = false;

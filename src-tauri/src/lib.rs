@@ -2,7 +2,9 @@ mod cache;
 mod db;
 mod error;
 mod events;
+mod i18n;
 mod ipc;
+mod menu;
 mod mesh;
 mod scan;
 mod state;
@@ -14,6 +16,7 @@ use std::sync::Arc;
 use tauri::Manager;
 
 use crate::state::AppState;
+use crate::types::{Language, ThemeMode};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -21,30 +24,28 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .on_menu_event(|app, event| {
-            use crate::types::ThemeMode;
-            let mode = match event.id().0.as_str() {
-                "theme:system" => ThemeMode::System,
-                "theme:light" => ThemeMode::Light,
-                "theme:dark" => ThemeMode::Dark,
-                _ => return,
-            };
-            let state: tauri::State<std::sync::Arc<crate::state::AppState>> =
-                app.state();
-            if let Ok(conn) = state.db.lock() {
-                let _ = crate::db::settings::set_theme_mode(&conn, mode);
-            }
-            if let Ok(handles) = state.theme_menu.lock() {
-                if let Some(h) = handles.as_ref() {
-                    let _ = h.system.set_checked(mode == ThemeMode::System);
-                    let _ = h.light.set_checked(mode == ThemeMode::Light);
-                    let _ = h.dark.set_checked(mode == ThemeMode::Dark);
+            let id = event.id().0.as_str();
+            let state: tauri::State<Arc<AppState>> = app.state();
+
+            if let Some(mode) = ThemeMode::from_menu_id(id) {
+                if let Ok(conn) = state.db.lock() {
+                    let _ = crate::db::settings::set_theme_mode(&conn, mode);
                 }
+                if let Ok(handles) = state.menu_handles.lock() {
+                    if let Some(h) = handles.as_ref() {
+                        let _ = h.system.set_checked(mode == ThemeMode::System);
+                        let _ = h.light.set_checked(mode == ThemeMode::Light);
+                        let _ = h.dark.set_checked(mode == ThemeMode::Dark);
+                    }
+                }
+                crate::events::theme_changed(app, mode);
+                return;
             }
-            crate::events::theme_changed(app, mode);
+
+            if let Some(lang) = Language::from_menu_id(id) {
+                let _ = crate::ipc::system::apply_language(app, &state, lang);
+            }
         })
-        // `setup` runs once on startup with access to the app handle. We use
-        // it to resolve the per-app data dir, open SQLite, apply migrations,
-        // then register the connection as shared state.
         .setup(|app| {
             let app_data = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data)?;
@@ -55,17 +56,13 @@ pub fn run() {
             let state = AppState::new(conn);
             app.manage(Arc::clone(&state));
 
-            // Scope the asset:// protocol at runtime. `tauri.conf.json` ships
-            // with an empty static scope because library paths aren't known
-            // until the user picks them. The thumbnail dir + every existing
-            // library path needs to be allowlisted so `convertFileSrc(path)`
-            // URLs load in `<img>` / `fetch`.
+            // `tauri.conf.json` ships with an empty asset:// scope because
+            // library paths aren't known until the user picks them. Allowlist
+            // the thumbnail dir + every existing library path at runtime so
+            // `convertFileSrc(path)` URLs load in `<img>` / `fetch`.
             let asset_scope = app.asset_protocol_scope();
             let _ = asset_scope.allow_directory(&thumb_dir, true);
 
-            // Start a watcher for every library already present in the DB.
-            // A missing or unreadable path surfaces via scan:error but does
-            // not block startup.
             let libraries = {
                 let conn = state
                     .db
@@ -92,58 +89,49 @@ pub fn run() {
                     }
                 }
             }
-            // ---- theme menu ----
-            let initial_mode = {
+
+            // One critical section: read both prefs, persist a detected
+            // language if this is a fresh DB. Subsequent launches read the
+            // stored value untouched, so changing macOS region later won't
+            // override an explicit user choice.
+            let (initial_mode, initial_lang) = {
                 let conn = state
                     .db
                     .lock()
                     .map_err(|e| format!("db mutex poisoned: {e}"))?;
-                crate::db::settings::get_theme_mode(&conn)
+                let mode = crate::db::settings::get_theme_mode(&conn)
+                    .map_err(|e| e.to_string())?;
+                let lang = match crate::db::settings::get_language(&conn)
                     .map_err(|e| e.to_string())?
+                {
+                    Some(l) => l,
+                    None => {
+                        let detected = crate::i18n::detect_os_language();
+                        crate::db::settings::set_language(&conn, detected)
+                            .map_err(|e| e.to_string())?;
+                        detected
+                    }
+                };
+                (mode, lang)
             };
 
-            use tauri::menu::{CheckMenuItemBuilder, Menu, SubmenuBuilder};
-            let item_system = CheckMenuItemBuilder::with_id("theme:system", "System")
-                .checked(initial_mode == crate::types::ThemeMode::System)
-                .build(app)?;
-            let item_light = CheckMenuItemBuilder::with_id("theme:light", "Light")
-                .checked(initial_mode == crate::types::ThemeMode::Light)
-                .build(app)?;
-            let item_dark = CheckMenuItemBuilder::with_id("theme:dark", "Dark")
-                .checked(initial_mode == crate::types::ThemeMode::Dark)
-                .build(app)?;
-
-            let theme_submenu = SubmenuBuilder::new(app, "Theme")
-                .item(&item_system)
-                .item(&item_light)
-                .item(&item_dark)
-                .build()?;
-
-            let menu = Menu::default(app.handle())?;
-            menu.append(&theme_submenu)?;
-            app.set_menu(menu)?;
-
+            let theme_handles = crate::menu::build(app.handle(), initial_mode, initial_lang)
+                .map_err(|e| e.to_string())?;
             *state
-                .theme_menu
+                .menu_handles
                 .lock()
-                .map_err(|e| format!("theme_menu mutex poisoned: {e}"))? =
-                Some(crate::state::ThemeMenuHandles {
-                    system: item_system,
-                    light: item_light,
-                    dark: item_dark,
-                });
+                .map_err(|e| format!("menu_handles mutex poisoned: {e}"))? = Some(theme_handles);
 
-            // ---- apply theme to the native window background ----
-            // Avoids the dark-flash when the user is in light mode and Tauri
+            // Avoid the dark-flash when the user is in light mode and Tauri
             // would otherwise paint the WKWebView container dark before the
             // first frame.
             if let Some(window) = app.get_webview_window("main") {
                 let resolved_dark = match initial_mode {
-                    crate::types::ThemeMode::Dark => true,
-                    crate::types::ThemeMode::Light => false,
-                    // System: we can't read prefers-color-scheme from Rust;
+                    ThemeMode::Dark => true,
+                    ThemeMode::Light => false,
+                    // System: prefers-color-scheme isn't readable from Rust;
                     // pick the OS theme via Tauri's Window API.
-                    crate::types::ThemeMode::System => window
+                    ThemeMode::System => window
                         .theme()
                         .map(|t| t == tauri::Theme::Dark)
                         .unwrap_or(true),
@@ -171,6 +159,8 @@ pub fn run() {
             ipc::thumbnails::list_thumbnail_keys,
             ipc::system::reveal_in_finder,
             ipc::system::get_theme_mode,
+            ipc::system::get_preferences,
+            ipc::system::set_language,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

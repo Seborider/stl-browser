@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { FileEntry } from "../../generated";
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function DetailViewer({ file, onClose }: Props) {
+  const { t } = useTranslation();
   const [wireframe, setWireframe] = useState(false);
   const [flatShading, setFlatShading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,29 +45,29 @@ export function DetailViewer({ file, onClose }: Props) {
         <ToggleButton
           active={wireframe}
           onClick={() => setWireframe((v) => !v)}
-          label="Wireframe"
+          label={t("viewer.wireframe")}
           hint="W"
         />
         <ToggleButton
           active={!flatShading}
           onClick={() => setFlatShading((v) => !v)}
-          label="Smooth"
+          label={t("viewer.smooth")}
           hint="S"
         />
         <button
           type="button"
           onClick={onClose}
           className="ml-2 rounded px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200 dark:text-neutral-300 dark:hover:bg-neutral-800"
-          title="Close (Esc)"
+          title={t("viewer.closeHint")}
         >
-          Close
+          {t("viewer.close")}
         </button>
       </header>
 
       <div className="min-h-0 flex-1">
         {error ? (
           <div className="flex h-full items-center justify-center p-6 text-center text-sm text-red-600 dark:text-red-400">
-            Failed to load mesh: {error}
+            {t("viewer.loadFailed", { reason: error })}
           </div>
         ) : (
           <Canvas camera={{ fov: 35, near: 0.1, far: 10000, position: [200, -200, 150] }}>

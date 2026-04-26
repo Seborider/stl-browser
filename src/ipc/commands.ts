@@ -3,7 +3,9 @@ import type {
   FileDetails,
   FileEntry,
   FileQuery,
+  Language,
   Library,
+  Preferences,
   ThemeMode,
 } from "../generated";
 
@@ -74,4 +76,12 @@ export function revealInFinder(path: string): Promise<void> {
 
 export function getThemeMode(): Promise<ThemeMode> {
   return invoke<ThemeMode>("get_theme_mode");
+}
+
+export function getPreferences(): Promise<Preferences> {
+  return invoke<Preferences>("get_preferences");
+}
+
+export function setLanguage(language: Language): Promise<void> {
+  return invoke<void>("set_language", { language });
 }

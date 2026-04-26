@@ -1,0 +1,66 @@
+{
+  "toolbar": {
+    "search": "Dateien suchen…",
+    "sort": "Sortierung",
+    "sortAscending": "Aufsteigend sortieren",
+    "sortDescending": "Absteigend sortieren",
+    "ascending": "Aufsteigend",
+    "descending": "Absteigend",
+    "view": "Ansicht",
+    "viewMode": "Ansichtsmodus",
+    "size": "Größe",
+    "gridSize": "Kachelgröße",
+    "gridSm": "Klein",
+    "gridMd": "Mittel",
+    "gridLg": "Groß",
+    "gridXl": "XL",
+    "viewGrid": "Raster",
+    "viewList": "Liste",
+    "fileCount_one": "{{count}} Datei",
+    "fileCount_other": "{{count}} Dateien"
+  },
+  "sidebar": {
+    "libraries": "Bibliotheken",
+    "addLibrary": "Bibliotheksordner hinzufügen",
+    "addShort": "+ Hinzufügen",
+    "allFiles": "Alle Dateien",
+    "empty": "Noch keine Bibliotheken. Klicke auf <span>+ Hinzufügen</span>, um einen Ordner auszuwählen.",
+    "remove": "{{name}} entfernen",
+    "confirmRemove": "„{{name}}\" aus STL Browser entfernen?\n\nDateien auf dem Datenträger bleiben unverändert.",
+    "footer": "Phase 7.5 · i18n"
+  },
+  "list": {
+    "name": "Name",
+    "type": "Typ",
+    "size": "Größe",
+    "modified": "Geändert",
+    "empty": "Noch keine Dateien. Füge einen Bibliotheksordner hinzu, um loszulegen."
+  },
+  "grid": {
+    "empty": "Noch keine Dateien. Füge einen Bibliotheksordner hinzu, um loszulegen."
+  },
+  "inspector": {
+    "title": "Inspektor",
+    "noFile": "Keine Datei ausgewählt",
+    "pickHint": "Wähle eine Kachel im Raster, um die Metadaten anzuzeigen.",
+    "library": "Bibliothek",
+    "format": "Format",
+    "size": "Größe",
+    "modified": "Geändert",
+    "revealInFinder": "Im Finder anzeigen",
+    "triangles": "Dreiecke",
+    "dimensions": "Größe (mm)",
+    "surfaceArea": "Oberfläche",
+    "volume": "Volumen",
+    "notWatertight": "— (nicht wasserdicht)",
+    "parseFailed": "Analyse fehlgeschlagen: {{reason}}",
+    "parsing": "Mesh wird analysiert…"
+  },
+  "viewer": {
+    "wireframe": "Drahtgitter",
+    "smooth": "Glatt",
+    "close": "Schließen",
+    "closeHint": "Schließen (Esc)",
+    "loadFailed": "Mesh konnte nicht geladen werden: {{reason}}"
+  }
+}

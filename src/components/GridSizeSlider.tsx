@@ -1,14 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { useAppStore, type GridSize } from "../state/store";
 
 const STEPS: GridSize[] = ["sm", "md", "lg", "xl"];
-const LABELS: Record<GridSize, string> = {
-  sm: "Small",
-  md: "Medium",
-  lg: "Large",
-  xl: "X-Large",
+const LABEL_KEYS: Record<GridSize, "toolbar.gridSm" | "toolbar.gridMd" | "toolbar.gridLg" | "toolbar.gridXl"> = {
+  sm: "toolbar.gridSm",
+  md: "toolbar.gridMd",
+  lg: "toolbar.gridLg",
+  xl: "toolbar.gridXl",
 };
 
 export function GridSizeSlider() {
+  const { t } = useTranslation();
   const gridSize = useAppStore((s) => s.gridSize);
   const setGridSize = useAppStore((s) => s.setGridSize);
   const index = STEPS.indexOf(gridSize);
@@ -16,11 +18,11 @@ export function GridSizeSlider() {
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] uppercase tracking-wider text-neutral-500">
-        Size
+        {t("toolbar.size")}
       </span>
       <div
         role="group"
-        aria-label="Grid size"
+        aria-label={t("toolbar.gridSize")}
         className="flex items-center rounded-md border border-neutral-200 bg-white p-0.5 dark:border-neutral-800 dark:bg-neutral-900"
       >
         {STEPS.map((step, i) => (
@@ -29,7 +31,7 @@ export function GridSizeSlider() {
             type="button"
             onClick={() => setGridSize(step)}
             aria-pressed={gridSize === step}
-            title={LABELS[step]}
+            title={t(LABEL_KEYS[step])}
             className={
               "flex h-6 items-center justify-center rounded-[5px] px-2 text-[11px] font-medium transition-colors " +
               (gridSize === step
@@ -49,7 +51,7 @@ export function GridSizeSlider() {
         ))}
       </div>
       <span className="w-14 text-[11px] tabular-nums text-neutral-500">
-        {LABELS[STEPS[index]]}
+        {t(LABEL_KEYS[STEPS[index]])}
       </span>
     </div>
   );

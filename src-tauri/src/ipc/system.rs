@@ -3,8 +3,9 @@ use tauri_plugin_shell::ShellExt;
 
 use crate::db;
 use crate::error::IpcError;
+use crate::events;
 use crate::state::AppState;
-use crate::types::ThemeMode;
+use crate::types::{Language, Preferences, ThemeMode};
 
 /// Reveal a file in Finder via `open -R <abs_path>`.
 ///
@@ -41,4 +42,52 @@ pub async fn get_theme_mode(
         .lock()
         .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
     db::settings::get_theme_mode(&conn)
+}
+
+/// Combined accessor so the renderer's bootstrap path needs one IPC round
+/// trip rather than two before React mounts. Language defaults to `System`
+/// if no row exists — the setup hook persists a concrete value on first
+/// launch, so the fallback is only hit if the row is manually wiped.
+#[tauri::command]
+pub async fn get_preferences(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+) -> Result<Preferences, IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    let theme = db::settings::get_theme_mode(&conn)?;
+    let language = db::settings::get_language(&conn)?.unwrap_or(Language::System);
+    Ok(Preferences { theme, language })
+}
+
+#[tauri::command]
+pub async fn set_language(
+    app: AppHandle,
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+    language: Language,
+) -> Result<(), IpcError> {
+    apply_language(&app, state.inner(), language)
+}
+
+// Shared by the IPC command and the on_menu_event handler in `lib.rs`.
+// Reads the current theme and persists language under one DB lock, then
+// rebuilds the native menu (so labels relabel) and emits `language:changed`
+// so the renderer reconciles too.
+pub(crate) fn apply_language(
+    app: &AppHandle,
+    state: &std::sync::Arc<AppState>,
+    language: Language,
+) -> Result<(), IpcError> {
+    let theme = {
+        let conn = state
+            .db
+            .lock()
+            .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+        db::settings::set_language(&conn, language)?;
+        db::settings::get_theme_mode(&conn)?
+    };
+    crate::menu::rebuild(app, state, theme, language)?;
+    events::language_changed(app, language);
+    Ok(())
 }
