@@ -4,6 +4,7 @@ import type { SortKey, SortDirection, ThemeMode } from "../generated";
 
 export type { SortKey, SortDirection, ThemeMode };
 export type GridSize = "sm" | "md" | "lg" | "xl";
+export type ViewMode = "grid" | "list";
 
 // Mirrored verbatim by the inline bootstrap in index.html — keep them in sync.
 export const THEME_LS_KEY = "stl-browser:theme";
@@ -21,6 +22,7 @@ interface AppState {
   sortDirection: SortDirection;
   search: string;
   gridSize: GridSize;
+  viewMode: ViewMode;
   themeMode: ThemeMode;
   paneWidths: PaneWidths;
 
@@ -31,6 +33,7 @@ interface AppState {
   toggleSortDirection: () => void;
   setSearch: (q: string) => void;
   setGridSize: (size: GridSize) => void;
+  setViewMode: (mode: ViewMode) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setPaneWidth: (pane: keyof PaneWidths, width: number) => void;
 }
@@ -47,6 +50,7 @@ export const useAppStore = create<AppState>()(
       sortDirection: "asc",
       search: "",
       gridSize: "md",
+      viewMode: "grid",
       themeMode: "system",
       paneWidths: DEFAULT_PANES,
 
@@ -65,6 +69,8 @@ export const useAppStore = create<AppState>()(
         })),
       setSearch: (q) => set({ search: q, selectedFileId: null }),
       setGridSize: (size) => set({ gridSize: size }),
+      setViewMode: (mode) =>
+        set((s) => (s.viewMode === mode ? s : { viewMode: mode })),
       setThemeMode: (mode) =>
         set((s) => {
           if (s.themeMode === mode) return s;
@@ -84,6 +90,7 @@ export const useAppStore = create<AppState>()(
         sortKey: s.sortKey,
         sortDirection: s.sortDirection,
         gridSize: s.gridSize,
+        viewMode: s.viewMode,
         paneWidths: s.paneWidths,
         activeLibraryId: s.activeLibraryId,
       }),

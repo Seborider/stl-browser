@@ -1,13 +1,15 @@
 import { useMemo, useRef, useState } from "react";
-import type { VirtuosoGridHandle } from "react-virtuoso";
+import type { VirtuosoGridHandle, VirtuosoHandle } from "react-virtuoso";
 import { Sidebar } from "./components/Sidebar";
 import { Grid } from "./components/Grid";
+import { List } from "./components/List";
 import { Inspector } from "./components/Inspector";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SortDropdown } from "./components/SortDropdown";
 import { GridSizeSlider } from "./components/GridSizeSlider";
+import { ViewModeToggle } from "./components/ViewModeToggle";
 import { SearchBox } from "./components/SearchBox";
-import { useAppStore } from "./state/store";
+import { useAppStore, type ViewMode } from "./state/store";
 import { useVisibleFiles } from "./hooks/useVisibleFiles";
 import { DetailViewer } from "./components/viewer/DetailViewer";
 import { useLibraries } from "./hooks/useLibraries";
@@ -29,6 +31,7 @@ function App() {
   const selectedFileId = useAppStore((s) => s.selectedFileId);
   const viewerFileId = useAppStore((s) => s.viewerFileId);
   const setViewerFileId = useAppStore((s) => s.setViewerFileId);
+  const viewMode = useAppStore((s) => s.viewMode);
 
   useTheme();
   useLiveEvents();
@@ -51,7 +54,8 @@ function App() {
     [files, viewerFileId],
   );
 
-  const virtuosoRef = useRef<VirtuosoGridHandle | null>(null);
+  const gridVirtuosoRef = useRef<VirtuosoGridHandle | null>(null);
+  const listVirtuosoRef = useRef<VirtuosoHandle | null>(null);
   const inspectorRef = useRef<HTMLDivElement | null>(null);
   const visibleRangeRef = useRef<{ startIndex: number; endIndex: number }>({
     startIndex: 0,
@@ -61,17 +65,18 @@ function App() {
 
   useKeyboardNav({
     files,
-    columns,
+    columns: viewMode === "list" ? 1 : columns,
     focusInspector: () => inspectorRef.current?.focus(),
     scrollToIndex: (index) => {
       const { startIndex, endIndex } = visibleRangeRef.current;
-      if (index < startIndex || index > endIndex) {
-        virtuosoRef.current?.scrollToIndex({
-          index,
-          align: index < startIndex ? "start" : "end",
-          behavior: "auto",
-        });
-      }
+      if (index >= startIndex && index <= endIndex) return;
+      const ref =
+        viewMode === "list" ? listVirtuosoRef.current : gridVirtuosoRef.current;
+      ref?.scrollToIndex({
+        index,
+        align: index < startIndex ? "start" : "end",
+        behavior: "auto",
+      });
     },
   });
 
@@ -94,15 +99,24 @@ function App() {
       />
 
       <section className="flex min-w-0 flex-1 flex-col bg-neutral-50 dark:bg-neutral-950">
-        <Toolbar count={files.length} />
+        <Toolbar count={files.length} viewMode={viewMode} />
         <div className="min-h-0 flex-1">
-          <Grid
-            files={files}
-            virtuosoRef={virtuosoRef}
-            onColumnsChange={setColumns}
-            onRangeChanged={(r) => (visibleRangeRef.current = r)}
-            onActivate={setViewerFileId}
-          />
+          {viewMode === "list" ? (
+            <List
+              files={files}
+              virtuosoRef={listVirtuosoRef}
+              onRangeChanged={(r) => (visibleRangeRef.current = r)}
+              onActivate={setViewerFileId}
+            />
+          ) : (
+            <Grid
+              files={files}
+              virtuosoRef={gridVirtuosoRef}
+              onColumnsChange={setColumns}
+              onRangeChanged={(r) => (visibleRangeRef.current = r)}
+              onActivate={setViewerFileId}
+            />
+          )}
         </div>
       </section>
 
@@ -129,14 +143,20 @@ function App() {
   );
 }
 
-function Toolbar({ count }: { count: number }) {
+function Toolbar({ count, viewMode }: { count: number; viewMode: ViewMode }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-neutral-200/70 bg-neutral-50/80 px-3 dark:border-neutral-800/70 dark:bg-neutral-900/40">
       <SearchBox />
       <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
       <SortDropdown />
       <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
-      <GridSizeSlider />
+      <ViewModeToggle />
+      {viewMode === "grid" && (
+        <>
+          <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
+          <GridSizeSlider />
+        </>
+      )}
       <div className="ml-auto text-[11px] tabular-nums text-neutral-500">
         {count.toLocaleString()} {count === 1 ? "file" : "files"}
       </div>
