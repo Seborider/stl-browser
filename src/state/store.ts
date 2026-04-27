@@ -25,6 +25,9 @@ interface AppState {
   viewMode: ViewMode;
   themeMode: ThemeMode;
   paneWidths: PaneWidths;
+  modelColor: string;
+  lightColor: string;
+  lightAzimuthDeg: number;
 
   setActiveLibrary: (id: number | null) => void;
   setSelectedFile: (id: number | null) => void;
@@ -36,9 +39,17 @@ interface AppState {
   setViewMode: (mode: ViewMode) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setPaneWidth: (pane: keyof PaneWidths, width: number) => void;
+  setModelColor: (hex: string) => void;
+  setLightColor: (hex: string) => void;
+  setLightAzimuthDeg: (deg: number) => void;
 }
 
 const DEFAULT_PANES: PaneWidths = { sidebar: 220, inspector: 320 };
+
+// Mirrored in src-tauri/src/types.rs (DEFAULT_MODEL_COLOR etc.) — keep in sync.
+export const DEFAULT_MODEL_COLOR = "#c0c0d0";
+export const DEFAULT_LIGHT_COLOR = "#ffffff";
+export const DEFAULT_LIGHT_AZIMUTH_DEG = 45;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -53,6 +64,9 @@ export const useAppStore = create<AppState>()(
       viewMode: "grid",
       themeMode: "system",
       paneWidths: DEFAULT_PANES,
+      modelColor: DEFAULT_MODEL_COLOR,
+      lightColor: DEFAULT_LIGHT_COLOR,
+      lightAzimuthDeg: DEFAULT_LIGHT_AZIMUTH_DEG,
 
       setActiveLibrary: (id) =>
         set({ activeLibraryId: id, selectedFileId: null }),
@@ -81,6 +95,23 @@ export const useAppStore = create<AppState>()(
         }),
       setPaneWidth: (pane, width) =>
         set((s) => ({ paneWidths: { ...s.paneWidths, [pane]: width } })),
+      setModelColor: (hex) =>
+        set((s) => {
+          const normalized = hex.toLowerCase();
+          return s.modelColor === normalized ? s : { modelColor: normalized };
+        }),
+      setLightColor: (hex) =>
+        set((s) => {
+          const normalized = hex.toLowerCase();
+          return s.lightColor === normalized ? s : { lightColor: normalized };
+        }),
+      setLightAzimuthDeg: (deg) =>
+        set((s) => {
+          const wrapped = ((deg % 360) + 360) % 360;
+          return s.lightAzimuthDeg === wrapped
+            ? s
+            : { lightAzimuthDeg: wrapped };
+        }),
     }),
     {
       // Bumped name suffix (`:v2`) so the pre-Phase-2 persisted state (which

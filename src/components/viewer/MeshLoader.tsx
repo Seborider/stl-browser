@@ -20,6 +20,8 @@ interface Props {
   flatShading: boolean;
   controlsRef: RefObject<OrbitControlsRef | null>;
   onError: (message: string) => void;
+  onMaterialChange?: (mat: THREE.MeshStandardMaterial | null) => void;
+  onBoundsChange?: (bounds: { center: THREE.Vector3; radius: number } | null) => void;
 }
 
 function parseSubject(bytes: ArrayBuffer, extension: string): THREE.Object3D {
@@ -58,6 +60,8 @@ export function MeshLoader({
   flatShading,
   controlsRef,
   onError,
+  onMaterialChange,
+  onBoundsChange,
 }: Props) {
   const [subject, setSubject] = useState<THREE.Object3D | null>(null);
   const materialRef = useRef<THREE.MeshStandardMaterial | null>(null);
@@ -83,6 +87,7 @@ export function MeshLoader({
           wireframe,
         });
         materialRef.current = mat;
+        onMaterialChange?.(mat);
         obj.traverse((child) => {
           const m = child as THREE.Mesh;
           if (m.isMesh) {
@@ -105,6 +110,7 @@ export function MeshLoader({
         const sphere = new THREE.Sphere();
         finalBbox.getBoundingSphere(sphere);
         const radius = Math.max(sphere.radius, 10);
+        onBoundsChange?.({ center: sphere.center.clone(), radius });
         const fov = (camera.fov * Math.PI) / 180;
         const dist = (radius / Math.sin(fov / 2)) * 1.35;
 
@@ -143,9 +149,11 @@ export function MeshLoader({
         materialRef.current.dispose();
         materialRef.current = null;
       }
+      onMaterialChange?.(null);
+      onBoundsChange?.(null);
       setSubject(null);
     };
-  }, [fileId, extension, camera, controlsRef, onError]);
+  }, [fileId, extension, camera, controlsRef, onError, onMaterialChange, onBoundsChange]);
 
   // Flipping flatShading on an existing material requires a shader rebuild.
   useEffect(() => {

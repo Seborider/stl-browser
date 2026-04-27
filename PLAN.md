@@ -201,6 +201,12 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
 Add German alongside English with the macOS menu bar as the settings surface — no in-app panel. Detect OS locale on first launch (`sys-locale`, primary tag only — German if `de*`, English otherwise) and persist the user's override in the existing SQLite `settings` table (migration v4) as a `language` row alongside `theme_mode`. Replace the current top-level `Theme` menu with a new top-level `Settings` menu containing `Theme` and `Language` as nested submenus (`Theme` items keep their existing `theme:*` ids; `Language` adds `language:system` / `language:en` / `language:de`). On language change, rebuild the native menu via `app.set_menu(build_menu(app, lang))` so menu labels relabel immediately — Tauri menus are static after construction, and the menu is small enough that rebuild is cheap. Menu strings are localized via a static `match` map in `src-tauri/src/i18n.rs` (Rust-side, separate from React). React strings move to `react-i18next` with `i18next` plural rules; flat catalogs at `src/i18n/locales/{en,de}.json` grouped by area (`grid.*`, `viewer.*`, `inspector.*`, `sidebar.*`, `toolbar.*`). Type-safe `t()` keys via i18next's module augmentation in `src/i18n/types.d.ts`. New types `Language` and `Preferences` derive `TS` and emit to `src/generated/`. New IPC: `get_preferences()` and `set_language(lang)`; new event `language:changed`. New hook `src/hooks/useLanguage.ts` mirrors `useTheme.ts`. Native menu retitle of standard macOS items (Quit, Edit…) is handled by AppKit and not touched. Sub-phases: 7.5.A backend foundation (locale + DB + IPC + ts-rs), 7.5.B native menu rewire (`Settings` parent + `Language` submenu + menu rebuild on change), 7.5.C frontend i18n scaffolding (`i18next` init + `useLanguage` + `language:changed` listener), 7.5.D string migration (every literal in §8 of the plan file moves to `t(key)` with `en.json` + `de.json` populated).
 - **Exit criterion:** with macOS region set to Germany on a fresh DB, the app boots in German; switching `Settings → Language` from the menu instantly relabels both the menu and the React UI; choices persist across relaunch; theme menu still works exactly as before.
 
+### Phase 7.6 — Detail-viewer appearance controls (1 day)
+Live model-color / light-color / light-azimuth controls in the detail viewer, persisted globally in the existing SQLite `settings` k/v table. Extends `Preferences` (no schema bump) with `model_color`, `light_color`, `light_azimuth_deg`. Adds three setter IPC commands (`set_model_color`, `set_light_color`, `set_light_azimuth`) following the `set_language` pattern. Three header popovers (`@radix-ui/react-popover`, the same primitive shadcn wraps — chosen over a full shadcn install to keep deps small and stay in line with the project's hand-crafted Tailwind buttons) anchor a native `<input type="color">` for colors and a custom SVG `AzimuthDial` for direction. Mutations bypass r3f re-renders by mutating refs into the single uniform `MeshStandardMaterial` (`MeshLoader.tsx`, applied across STL/3MF/OBJ) and a `directionalLight` ref. Elevation is fixed at 45°. Setters update Zustand synchronously, then debounce SQLite writes by 250 ms.
+- **Out of scope:** elevation control, multiple lights, HDRI/environment, per-file appearance, theme-aware scene colors.
+- **Exit criterion:** open viewer, drag azimuth dial — light orbits live; pick model color — mesh updates immediately; relaunch — values restored.
+- **Phase 7.6 — Status: complete.**
+
 ### Phase 8 — Ship prep (1 day, can parallelize with 6–7)
 - Tauri bundler config for `.app` and `.dmg`.
 - Developer ID signing + notarization pipeline (see §8).
@@ -680,6 +686,7 @@ Run each phase's check before starting the next.
 - **Distribution:** Developer ID + notarized DMG, no sandbox. (Confirmed.)
 - **Rust → TS types:** ts-rs. (Confirmed.)
 - **Architecture:** Apple Silicon (arm64) only. (Confirmed.)
+- **Detail-viewer appearance:** one global preference (model color, light color, light azimuth) — not per-file. (Confirmed Phase 7.6.)
 
 ## 12. Remaining minor questions (safe to defer — sensible defaults set)
 

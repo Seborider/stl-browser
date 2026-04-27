@@ -61,6 +61,11 @@
     "smooth": "Smooth",
     "close": "Close",
     "closeHint": "Close (Esc)",
-    "loadFailed": "Failed to load mesh: {{reason}}"
+    "loadFailed": "Failed to load mesh: {{reason}}",
+    "modelColor": "Model color",
+    "lightColor": "Light color",
+    "lightDirection": "Light direction",
+    "azimuth": "Azimuth",
+    "reset": "Reset"
   }
 }

@@ -161,6 +161,9 @@ pub fn run() {
             ipc::system::get_theme_mode,
             ipc::system::get_preferences,
             ipc::system::set_language,
+            ipc::system::set_model_color,
+            ipc::system::set_light_color,
+            ipc::system::set_light_azimuth,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

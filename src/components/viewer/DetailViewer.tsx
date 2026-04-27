@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState, type ComponentRef } from "rea
 import { useTranslation } from "react-i18next";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
 import type { FileEntry } from "../../generated";
+import { AppearanceControls } from "./AppearanceControls";
 import { MeshLoader } from "./MeshLoader";
 import { PrintBedGrid } from "./PrintBedGrid";
+import { ViewerAppearance } from "./ViewerAppearance";
 
 export type OrbitControlsRef = ComponentRef<typeof OrbitControls>;
 
@@ -18,9 +21,26 @@ export function DetailViewer({ file, onClose }: Props) {
   const [wireframe, setWireframe] = useState(false);
   const [flatShading, setFlatShading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bounds, setBounds] = useState<{ center: THREE.Vector3; radius: number } | null>(null);
   const controlsRef = useRef<OrbitControlsRef | null>(null);
+  const materialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const lightRef = useRef<THREE.DirectionalLight | null>(null);
 
-  useEffect(() => setError(null), [file.id]);
+  useEffect(() => {
+    setError(null);
+    setBounds(null);
+  }, [file.id]);
+
+  const handleMaterial = useCallback(
+    (mat: THREE.MeshStandardMaterial | null) => {
+      materialRef.current = mat;
+    },
+    [],
+  );
+  const handleBounds = useCallback(
+    (b: { center: THREE.Vector3; radius: number } | null) => setBounds(b),
+    [],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -54,6 +74,8 @@ export function DetailViewer({ file, onClose }: Props) {
           label={t("viewer.smooth")}
           hint="S"
         />
+        <div className="mx-1 h-5 w-px bg-neutral-300 dark:bg-neutral-700" aria-hidden />
+        <AppearanceControls />
         <button
           type="button"
           onClick={onClose}
@@ -72,7 +94,7 @@ export function DetailViewer({ file, onClose }: Props) {
         ) : (
           <Canvas camera={{ fov: 35, near: 0.1, far: 10000, position: [200, -200, 150] }}>
             <ambientLight intensity={0.6} />
-            <directionalLight position={[200, 200, 400]} intensity={0.9} />
+            <directionalLight ref={lightRef} intensity={0.9} />
             <PrintBedGrid />
             <MeshLoader
               key={file.id}
@@ -82,6 +104,13 @@ export function DetailViewer({ file, onClose }: Props) {
               flatShading={flatShading}
               controlsRef={controlsRef}
               onError={handleError}
+              onMaterialChange={handleMaterial}
+              onBoundsChange={handleBounds}
+            />
+            <ViewerAppearance
+              materialRef={materialRef}
+              lightRef={lightRef}
+              bounds={bounds}
             />
             <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.08} />
           </Canvas>

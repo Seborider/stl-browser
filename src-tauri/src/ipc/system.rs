@@ -58,7 +58,52 @@ pub async fn get_preferences(
         .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
     let theme = db::settings::get_theme_mode(&conn)?;
     let language = db::settings::get_language(&conn)?.unwrap_or(Language::System);
-    Ok(Preferences { theme, language })
+    let model_color = db::settings::get_model_color(&conn)?;
+    let light_color = db::settings::get_light_color(&conn)?;
+    let light_azimuth_deg = db::settings::get_light_azimuth_deg(&conn)?;
+    Ok(Preferences {
+        theme,
+        language,
+        model_color,
+        light_color,
+        light_azimuth_deg,
+    })
+}
+
+#[tauri::command]
+pub async fn set_model_color(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+    hex: String,
+) -> Result<(), IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    db::settings::set_model_color(&conn, &hex)
+}
+
+#[tauri::command]
+pub async fn set_light_color(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+    hex: String,
+) -> Result<(), IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    db::settings::set_light_color(&conn, &hex)
+}
+
+#[tauri::command]
+pub async fn set_light_azimuth(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+    deg: f32,
+) -> Result<(), IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    db::settings::set_light_azimuth_deg(&conn, deg)
 }
 
 #[tauri::command]

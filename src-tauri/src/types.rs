@@ -270,13 +270,20 @@ impl Language {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Preferences {
     pub theme: ThemeMode,
     pub language: Language,
+    pub model_color: String,
+    pub light_color: String,
+    pub light_azimuth_deg: f32,
 }
+
+pub const DEFAULT_MODEL_COLOR: &str = "#c0c0d0";
+pub const DEFAULT_LIGHT_COLOR: &str = "#ffffff";
+pub const DEFAULT_LIGHT_AZIMUTH_DEG: f32 = 45.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]

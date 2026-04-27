@@ -85,3 +85,15 @@ export function getPreferences(): Promise<Preferences> {
 export function setLanguage(language: Language): Promise<void> {
   return invoke<void>("set_language", { language });
 }
+
+export function setModelColor(hex: string): Promise<void> {
+  return invoke<void>("set_model_color", { hex });
+}
+
+export function setLightColor(hex: string): Promise<void> {
+  return invoke<void>("set_light_color", { hex });
+}
+
+export function setLightAzimuth(deg: number): Promise<void> {
+  return invoke<void>("set_light_azimuth", { deg });
+}

@@ -61,6 +61,11 @@
     "smooth": "Glatt",
     "close": "Schließen",
     "closeHint": "Schließen (Esc)",
-    "loadFailed": "Mesh konnte nicht geladen werden: {{reason}}"
+    "loadFailed": "Mesh konnte nicht geladen werden: {{reason}}",
+    "modelColor": "Modellfarbe",
+    "lightColor": "Lichtfarbe",
+    "lightDirection": "Lichtrichtung",
+    "azimuth": "Azimut",
+    "reset": "Zurücksetzen"
   }
 }

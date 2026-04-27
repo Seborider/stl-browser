@@ -2,4 +2,4 @@
 import type { Language } from "./Language";
 import type { ThemeMode } from "./ThemeMode";
 
-export interface Preferences { theme: ThemeMode, language: Language, }
+export interface Preferences { theme: ThemeMode, language: Language, modelColor: string, lightColor: string, lightAzimuthDeg: number, }
