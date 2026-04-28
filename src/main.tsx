@@ -15,8 +15,8 @@ async function bootstrap() {
     const store = useAppStore.getState();
     store.setThemeMode(prefs.theme);
     store.setModelColor(prefs.modelColor);
-    store.setLightColor(prefs.lightColor);
-    store.setLightAzimuthDeg(prefs.lightAzimuthDeg);
+    store.setLights(prefs.lights);
+    store.setBackgroundColor(prefs.backgroundColor);
     await bootstrapI18n(prefs.language);
   } catch (err) {
     // Falling back to defaults still mounts a working UI; the setup hook

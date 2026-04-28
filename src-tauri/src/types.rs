@@ -273,17 +273,39 @@ impl Language {
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]
 #[serde(rename_all = "camelCase")]
+pub struct LightConfig {
+    pub color: String,
+    pub intensity_norm: f32,
+    pub azimuth_deg: f32,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../src/generated/")]
+#[serde(rename_all = "camelCase")]
 pub struct Preferences {
     pub theme: ThemeMode,
     pub language: Language,
     pub model_color: String,
-    pub light_color: String,
-    pub light_azimuth_deg: f32,
+    pub lights: Vec<LightConfig>,
+    pub background_color: String,
 }
 
 pub const DEFAULT_MODEL_COLOR: &str = "#c0c0d0";
 pub const DEFAULT_LIGHT_COLOR: &str = "#ffffff";
 pub const DEFAULT_LIGHT_AZIMUTH_DEG: f32 = 45.0;
+pub const DEFAULT_LIGHT_INTENSITY_NORM: f32 = 1.0;
+pub const DEFAULT_BACKGROUND_COLOR: &str = "#1f1f24";
+pub const MAX_LIGHTS: usize = 4;
+
+pub fn default_lights() -> Vec<LightConfig> {
+    vec![LightConfig {
+        color: DEFAULT_LIGHT_COLOR.to_string(),
+        intensity_norm: DEFAULT_LIGHT_INTENSITY_NORM,
+        azimuth_deg: DEFAULT_LIGHT_AZIMUTH_DEG,
+        enabled: true,
+    }]
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../src/generated/")]

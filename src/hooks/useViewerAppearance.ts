@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import {
-  setLightAzimuth as ipcSetLightAzimuth,
-  setLightColor as ipcSetLightColor,
+  setBackgroundColor as ipcSetBackgroundColor,
+  setLights as ipcSetLights,
   setModelColor as ipcSetModelColor,
 } from "../ipc/commands";
 import { useAppStore } from "../state/store";
+import type { LightConfig } from "../generated";
 
 const DEBOUNCE_MS = 250;
 
@@ -13,36 +14,36 @@ const DEBOUNCE_MS = 250;
 // at 60fps; the DB sees one write after the user stops moving the control.
 export function useViewerAppearance() {
   const modelColor = useAppStore((s) => s.modelColor);
-  const lightColor = useAppStore((s) => s.lightColor);
-  const lightAzimuthDeg = useAppStore((s) => s.lightAzimuthDeg);
+  const lights = useAppStore((s) => s.lights);
+  const backgroundColor = useAppStore((s) => s.backgroundColor);
 
   const storeSetModelColor = useAppStore((s) => s.setModelColor);
-  const storeSetLightColor = useAppStore((s) => s.setLightColor);
-  const storeSetLightAzimuthDeg = useAppStore((s) => s.setLightAzimuthDeg);
+  const storeSetLights = useAppStore((s) => s.setLights);
+  const storeSetBackgroundColor = useAppStore((s) => s.setBackgroundColor);
 
-  const setModelColor = useDebouncedPersister(
+  const setModelColor = useDebouncedPersister<string>(
     storeSetModelColor,
     ipcSetModelColor,
     "set_model_color",
   );
-  const setLightColor = useDebouncedPersister(
-    storeSetLightColor,
-    ipcSetLightColor,
-    "set_light_color",
+  const setLights = useDebouncedPersister<LightConfig[]>(
+    storeSetLights,
+    ipcSetLights,
+    "set_lights",
   );
-  const setLightAzimuthDeg = useDebouncedPersister(
-    storeSetLightAzimuthDeg,
-    ipcSetLightAzimuth,
-    "set_light_azimuth",
+  const setBackgroundColor = useDebouncedPersister<string>(
+    storeSetBackgroundColor,
+    ipcSetBackgroundColor,
+    "set_background_color",
   );
 
   return {
     modelColor,
-    lightColor,
-    lightAzimuthDeg,
+    lights,
+    backgroundColor,
     setModelColor,
-    setLightColor,
-    setLightAzimuthDeg,
+    setLights,
+    setBackgroundColor,
   };
 }
 

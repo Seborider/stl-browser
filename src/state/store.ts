@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SortKey, SortDirection, ThemeMode } from "../generated";
+import type { LightConfig, SortKey, SortDirection, ThemeMode } from "../generated";
 
-export type { SortKey, SortDirection, ThemeMode };
+export type { LightConfig, SortKey, SortDirection, ThemeMode };
 export type GridSize = "sm" | "md" | "lg" | "xl";
 export type ViewMode = "grid" | "list";
 
@@ -26,8 +26,8 @@ interface AppState {
   themeMode: ThemeMode;
   paneWidths: PaneWidths;
   modelColor: string;
-  lightColor: string;
-  lightAzimuthDeg: number;
+  lights: LightConfig[];
+  backgroundColor: string;
 
   setActiveLibrary: (id: number | null) => void;
   setSelectedFile: (id: number | null) => void;
@@ -40,8 +40,8 @@ interface AppState {
   setThemeMode: (mode: ThemeMode) => void;
   setPaneWidth: (pane: keyof PaneWidths, width: number) => void;
   setModelColor: (hex: string) => void;
-  setLightColor: (hex: string) => void;
-  setLightAzimuthDeg: (deg: number) => void;
+  setLights: (lights: LightConfig[]) => void;
+  setBackgroundColor: (hex: string) => void;
 }
 
 const DEFAULT_PANES: PaneWidths = { sidebar: 220, inspector: 320 };
@@ -50,6 +50,36 @@ const DEFAULT_PANES: PaneWidths = { sidebar: 220, inspector: 320 };
 export const DEFAULT_MODEL_COLOR = "#c0c0d0";
 export const DEFAULT_LIGHT_COLOR = "#ffffff";
 export const DEFAULT_LIGHT_AZIMUTH_DEG = 45;
+export const DEFAULT_LIGHT_INTENSITY_NORM = 1;
+export const DEFAULT_BACKGROUND_COLOR = "#1f1f24";
+export const MAX_LIGHTS = 4;
+
+export const DEFAULT_LIGHTS: LightConfig[] = [
+  {
+    color: DEFAULT_LIGHT_COLOR,
+    intensityNorm: DEFAULT_LIGHT_INTENSITY_NORM,
+    azimuthDeg: DEFAULT_LIGHT_AZIMUTH_DEG,
+    enabled: true,
+  },
+];
+
+function lightsEqual(a: LightConfig[], b: LightConfig[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    const y = b[i];
+    if (
+      x.color !== y.color ||
+      x.intensityNorm !== y.intensityNorm ||
+      x.azimuthDeg !== y.azimuthDeg ||
+      x.enabled !== y.enabled
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -65,8 +95,8 @@ export const useAppStore = create<AppState>()(
       themeMode: "system",
       paneWidths: DEFAULT_PANES,
       modelColor: DEFAULT_MODEL_COLOR,
-      lightColor: DEFAULT_LIGHT_COLOR,
-      lightAzimuthDeg: DEFAULT_LIGHT_AZIMUTH_DEG,
+      lights: DEFAULT_LIGHTS,
+      backgroundColor: DEFAULT_BACKGROUND_COLOR,
 
       setActiveLibrary: (id) =>
         set({ activeLibraryId: id, selectedFileId: null }),
@@ -100,17 +130,14 @@ export const useAppStore = create<AppState>()(
           const normalized = hex.toLowerCase();
           return s.modelColor === normalized ? s : { modelColor: normalized };
         }),
-      setLightColor: (hex) =>
+      setLights: (lights) =>
+        set((s) => (lightsEqual(s.lights, lights) ? s : { lights })),
+      setBackgroundColor: (hex) =>
         set((s) => {
           const normalized = hex.toLowerCase();
-          return s.lightColor === normalized ? s : { lightColor: normalized };
-        }),
-      setLightAzimuthDeg: (deg) =>
-        set((s) => {
-          const wrapped = ((deg % 360) + 360) % 360;
-          return s.lightAzimuthDeg === wrapped
+          return s.backgroundColor === normalized
             ? s
-            : { lightAzimuthDeg: wrapped };
+            : { backgroundColor: normalized };
         }),
     }),
     {

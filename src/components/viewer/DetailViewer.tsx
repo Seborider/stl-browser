@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type ComponentRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { FileEntry } from "../../generated";
 import { AppearanceControls } from "./AppearanceControls";
+import { GroundDisc } from "./GroundDisc";
 import { MeshLoader } from "./MeshLoader";
 import { PrintBedGrid } from "./PrintBedGrid";
 import { ViewerAppearance } from "./ViewerAppearance";
@@ -24,7 +25,15 @@ export function DetailViewer({ file, onClose }: Props) {
   const [bounds, setBounds] = useState<{ center: THREE.Vector3; radius: number } | null>(null);
   const controlsRef = useRef<OrbitControlsRef | null>(null);
   const materialRef = useRef<THREE.MeshStandardMaterial | null>(null);
-  const lightRef = useRef<THREE.DirectionalLight | null>(null);
+  const groundRef = useRef<THREE.Mesh | null>(null);
+  const light0 = useRef<THREE.DirectionalLight | null>(null);
+  const light1 = useRef<THREE.DirectionalLight | null>(null);
+  const light2 = useRef<THREE.DirectionalLight | null>(null);
+  const light3 = useRef<THREE.DirectionalLight | null>(null);
+  const lightRefs = useMemo(
+    () => [light0, light1, light2, light3],
+    [],
+  );
 
   useEffect(() => {
     setError(null);
@@ -94,7 +103,10 @@ export function DetailViewer({ file, onClose }: Props) {
         ) : (
           <Canvas camera={{ fov: 35, near: 0.1, far: 10000, position: [200, -200, 150] }}>
             <ambientLight intensity={0.6} />
-            <directionalLight ref={lightRef} intensity={0.9} />
+            {lightRefs.map((ref, i) => (
+              <directionalLight key={i} ref={ref} intensity={i === 0 ? 0.9 : 0} />
+            ))}
+            <GroundDisc ref={groundRef} bounds={bounds} />
             <PrintBedGrid />
             <MeshLoader
               key={file.id}
@@ -109,7 +121,8 @@ export function DetailViewer({ file, onClose }: Props) {
             />
             <ViewerAppearance
               materialRef={materialRef}
-              lightRef={lightRef}
+              lightRefs={lightRefs}
+              groundRef={groundRef}
               bounds={bounds}
             />
             <OrbitControls ref={controlsRef} makeDefault enableDamping dampingFactor={0.08} />

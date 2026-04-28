@@ -12,6 +12,7 @@ export type { IpcError } from "./IpcError";
 export type { Language } from "./Language";
 export type { LanguageChangedEvent } from "./LanguageChangedEvent";
 export type { Library } from "./Library";
+export type { LightConfig } from "./LightConfig";
 export type { MeshMetadata } from "./MeshMetadata";
 export type { MetadataReadyEvent } from "./MetadataReadyEvent";
 export type { Preferences } from "./Preferences";

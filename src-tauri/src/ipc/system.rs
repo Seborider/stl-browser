@@ -5,7 +5,7 @@ use crate::db;
 use crate::error::IpcError;
 use crate::events;
 use crate::state::AppState;
-use crate::types::{Language, Preferences, ThemeMode};
+use crate::types::{Language, LightConfig, Preferences, ThemeMode};
 
 /// Reveal a file in Finder via `open -R <abs_path>`.
 ///
@@ -59,14 +59,14 @@ pub async fn get_preferences(
     let theme = db::settings::get_theme_mode(&conn)?;
     let language = db::settings::get_language(&conn)?.unwrap_or(Language::System);
     let model_color = db::settings::get_model_color(&conn)?;
-    let light_color = db::settings::get_light_color(&conn)?;
-    let light_azimuth_deg = db::settings::get_light_azimuth_deg(&conn)?;
+    let lights = db::settings::get_lights(&conn)?;
+    let background_color = db::settings::get_background_color(&conn)?;
     Ok(Preferences {
         theme,
         language,
         model_color,
-        light_color,
-        light_azimuth_deg,
+        lights,
+        background_color,
     })
 }
 
@@ -83,7 +83,19 @@ pub async fn set_model_color(
 }
 
 #[tauri::command]
-pub async fn set_light_color(
+pub async fn set_lights(
+    state: tauri::State<'_, std::sync::Arc<AppState>>,
+    lights: Vec<LightConfig>,
+) -> Result<(), IpcError> {
+    let conn = state
+        .db
+        .lock()
+        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+    db::settings::set_lights(&conn, &lights)
+}
+
+#[tauri::command]
+pub async fn set_background_color(
     state: tauri::State<'_, std::sync::Arc<AppState>>,
     hex: String,
 ) -> Result<(), IpcError> {
@@ -91,19 +103,7 @@ pub async fn set_light_color(
         .db
         .lock()
         .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
-    db::settings::set_light_color(&conn, &hex)
-}
-
-#[tauri::command]
-pub async fn set_light_azimuth(
-    state: tauri::State<'_, std::sync::Arc<AppState>>,
-    deg: f32,
-) -> Result<(), IpcError> {
-    let conn = state
-        .db
-        .lock()
-        .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
-    db::settings::set_light_azimuth_deg(&conn, deg)
+    db::settings::set_background_color(&conn, &hex)
 }
 
 #[tauri::command]
