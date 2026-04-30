@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { VirtuosoGridHandle, VirtuosoHandle } from "react-virtuoso";
+import type { VirtuosoHandle } from "react-virtuoso";
 import { Sidebar } from "./components/Sidebar";
-import { Grid } from "./components/Grid";
+import { Grid, type GridHandle } from "./components/Grid";
 import { List } from "./components/List";
 import { Inspector } from "./components/Inspector";
 import { ResizeHandle } from "./components/ResizeHandle";
@@ -57,7 +57,7 @@ function App() {
     [files, viewerFileId],
   );
 
-  const gridVirtuosoRef = useRef<VirtuosoGridHandle | null>(null);
+  const gridVirtuosoRef = useRef<GridHandle | null>(null);
   const listVirtuosoRef = useRef<VirtuosoHandle | null>(null);
   const inspectorRef = useRef<HTMLDivElement | null>(null);
   const visibleRangeRef = useRef<{ startIndex: number; endIndex: number }>({
@@ -73,13 +73,12 @@ function App() {
     scrollToIndex: (index) => {
       const { startIndex, endIndex } = visibleRangeRef.current;
       if (index >= startIndex && index <= endIndex) return;
-      const ref =
-        viewMode === "list" ? listVirtuosoRef.current : gridVirtuosoRef.current;
-      ref?.scrollToIndex({
-        index,
-        align: index < startIndex ? "start" : "end",
-        behavior: "auto",
-      });
+      const align = index < startIndex ? "start" : "end";
+      if (viewMode === "list") {
+        listVirtuosoRef.current?.scrollToIndex({ index, align, behavior: "auto" });
+      } else {
+        gridVirtuosoRef.current?.scrollToIndex({ index, align });
+      }
     },
   });
 

@@ -1,6 +1,6 @@
-import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
-import { VirtuosoGrid, type VirtuosoGridHandle } from "react-virtuoso";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { FileEntry } from "../generated";
 import { useAppStore, type GridSize } from "../state/store";
 import { GridTile } from "./GridTile";
@@ -12,17 +12,31 @@ const TILE_MIN_PX: Record<GridSize, number> = {
   xl: 280,
 };
 
+// Approximate name-row + padding height added on top of the square tile.
+// GridTile is `flex flex-col p-1.5 gap-1.5` containing an aspect-square
+// thumbnail and a single-line name; ~23px on top of the thumb's edge length.
+const TILE_LABEL_PX = 23;
 const GRID_GAP_PX = 8;
 const GRID_PAD_PX = 12;
+const OVERSCAN_ROWS = 4;
+
+export interface GridHandle {
+  scrollToIndex: (opts: { index: number; align?: "start" | "end" }) => void;
+}
 
 interface Props {
   files: FileEntry[];
-  virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
+  virtuosoRef: Ref<GridHandle | null>;
   onColumnsChange: (columns: number) => void;
   onRangeChanged: (range: { startIndex: number; endIndex: number }) => void;
   onActivate: (fileId: number) => void;
 }
 
+// Replaced VirtuosoGrid with @tanstack/react-virtual to escape a recurring
+// main-thread RangeError inside react-virtuoso's reactive (urx) graph that
+// freezes the WebView. Tanstack's virtualizer is a plain function over scroll
+// position + measurements, no pub/sub graph, so it cannot exhibit this class
+// of bug. We only virtualize rows; each row CSS-grids its visible items.
 export function Grid({
   files,
   virtuosoRef,
@@ -34,11 +48,11 @@ export function Grid({
   const selectedFileId = useAppStore((s) => s.selectedFileId);
   const setSelectedFile = useAppStore((s) => s.setSelectedFile);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
   useLayoutEffect(() => {
-    const el = containerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
     setContainerWidth(el.clientWidth);
     const obs = new ResizeObserver((entries) => {
@@ -61,61 +75,109 @@ export function Grid({
     onColumnsChange(columns);
   }, [columns, onColumnsChange]);
 
-  const components = useMemo(
+  // Tile width derives from container width, columns, gap. Height = width
+  // (aspect-square thumb) + label row.
+  const tileWidth = useMemo(() => {
+    const inner = Math.max(0, containerWidth - GRID_PAD_PX * 2);
+    const totalGap = GRID_GAP_PX * Math.max(0, columns - 1);
+    return Math.max(0, (inner - totalGap) / columns);
+  }, [containerWidth, columns]);
+
+  const rowHeight = Math.max(1, Math.round(tileWidth + TILE_LABEL_PX));
+  const rowCount = Math.ceil(files.length / columns);
+
+  const virtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => rowHeight + GRID_GAP_PX,
+    overscan: OVERSCAN_ROWS,
+  });
+
+  // Re-measure when row height or column count changes.
+  useEffect(() => {
+    virtualizer.measure();
+  }, [rowHeight, columns, virtualizer]);
+
+  const virtualItems = virtualizer.getVirtualItems();
+
+  // Notify parent of visible item-index range. Used by keyboard nav to skip
+  // scrolling when a target is already on screen.
+  useEffect(() => {
+    if (virtualItems.length === 0) {
+      onRangeChanged({ startIndex: 0, endIndex: 0 });
+      return;
+    }
+    const first = virtualItems[0];
+    const last = virtualItems[virtualItems.length - 1];
+    onRangeChanged({
+      startIndex: first.index * columns,
+      endIndex: Math.min(files.length - 1, (last.index + 1) * columns - 1),
+    });
+  }, [virtualItems, columns, files.length, onRangeChanged]);
+
+  useImperativeHandle(
+    virtuosoRef,
     () => ({
-      List: forwardRef<HTMLDivElement, { style?: React.CSSProperties; children?: React.ReactNode }>(
-        function List({ style, children }, ref) {
+      scrollToIndex: ({ index, align }) => {
+        const row = Math.floor(index / Math.max(1, columns));
+        virtualizer.scrollToIndex(row, { align: align === "end" ? "end" : "start" });
+      },
+    }),
+    [columns, virtualizer],
+  );
+
+  const totalSize = virtualizer.getTotalSize();
+
+  if (files.length === 0) {
+    return (
+      <div ref={scrollRef} className="h-full w-full overflow-auto">
+        <EmptyState />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={scrollRef}
+      className="h-full w-full overflow-auto"
+      style={{ contain: "strict" }}
+    >
+      <div
+        style={{
+          height: totalSize + GRID_PAD_PX * 2,
+          position: "relative",
+        }}
+      >
+        {virtualItems.map((vRow) => {
+          const rowStart = vRow.index * columns;
+          const rowFiles = files.slice(rowStart, rowStart + columns);
           return (
             <div
-              ref={ref}
+              key={vRow.key}
               style={{
-                ...style,
+                position: "absolute",
+                top: 0,
+                left: GRID_PAD_PX,
+                right: GRID_PAD_PX,
+                transform: `translateY(${vRow.start + GRID_PAD_PX}px)`,
                 display: "grid",
                 gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                 gap: `${GRID_GAP_PX}px`,
-                padding: `${GRID_PAD_PX}px`,
               }}
             >
-              {children}
+              {rowFiles.map((file) => (
+                <GridTile
+                  key={file.id}
+                  file={file}
+                  selected={file.id === selectedFileId}
+                  onSelect={() => setSelectedFile(file.id)}
+                  onActivate={() => onActivate(file.id)}
+                />
+              ))}
             </div>
           );
-        },
-      ),
-      Item: function Item({
-        children,
-        ...props
-      }: React.HTMLAttributes<HTMLDivElement>) {
-        return (
-          <div {...props} style={{ width: "100%" }}>
-            {children}
-          </div>
-        );
-      },
-      EmptyPlaceholder: EmptyState,
-    }),
-    [columns],
-  );
-
-  return (
-    <div ref={containerRef} className="h-full w-full">
-      <VirtuosoGrid
-        ref={virtuosoRef}
-        style={{ height: "100%" }}
-        data={files}
-        overscan={800}
-        increaseViewportBy={400}
-        components={components}
-        rangeChanged={onRangeChanged}
-        computeItemKey={(_, file) => file.id}
-        itemContent={(_, file) => (
-          <GridTile
-            file={file}
-            selected={file.id === selectedFileId}
-            onSelect={() => setSelectedFile(file.id)}
-            onActivate={() => onActivate(file.id)}
-          />
-        )}
-      />
+        })}
+      </div>
     </div>
   );
 }

@@ -25,12 +25,14 @@ export function useThumbnailBackfill(libraries: Library[]): void {
     const libById = new Map(libraries.map((l) => [l.id, l]));
     const items: ThumbnailsNeededItem[] = [];
     const seen = new Set<string>();
+    const queue = renderQueue();
 
     for (const [libIdStr, bucket] of Object.entries(filesByLibrary)) {
       const lib = libById.get(Number(libIdStr));
       if (!lib) continue;
       for (const file of Object.values(bucket)) {
         if (availableKeys[file.cacheKey]) continue;
+        if (queue.hasFailed(file.cacheKey)) continue;
         if (seen.has(file.cacheKey)) continue;
         seen.add(file.cacheKey);
         items.push({
@@ -43,7 +45,7 @@ export function useThumbnailBackfill(libraries: Library[]): void {
     }
 
     if (items.length > 0) {
-      renderQueue().enqueue(items);
+      queue.enqueue(items);
     }
   }, [libraries, filesByLibrary, availableKeys, cacheDir]);
 }

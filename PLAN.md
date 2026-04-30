@@ -179,6 +179,10 @@ Repo is empty (only a "first commit"). This document is the architecture and pha
   - Grid swaps placeholder for real image.
 - Integrate with grid scroll position: bump priority for visible-and-near tiles.
 - **Exit criterion:** 500-file folder fully thumbnailed within ~1 min, cache persists across restarts, scrolling stays smooth throughout.
+- **Robustness invariants (added after a 3MF freeze incident):**
+  - All scene-graph traversals in `render-worker.ts` are iterative (`walkIter`, `updateMatrixWorldIter`, `computeWorldBbox`). `Object3D.traverse`, `Object3D.updateMatrixWorld(true)`, and `Box3.setFromObject` are recursive and overflow on pathological 3MF group nesting, crashing the worker repeatedly until the WKWebView itself dies.
+  - `render()` adds `obj` to the scene **inside** a try/finally that always detaches and disposes it. Any throw between scene-add and scene-remove must not leak the failed object into the persistent worker scene.
+  - The render queue keeps a session-local `failedKeys` set. `enqueue` and `useThumbnailBackfill` both consult it so a broken file is rendered at most once per session — without this, broken cache keys are re-enqueued on every `availableKeys` mutation.
 - **Phase 5 — Status: complete.**
 
 ### Phase 6 — Detail viewer (1–2 days)
@@ -461,7 +465,8 @@ If the queue explodes (e.g. a 50k-file library just got added), cap enqueued job
 | `@types/three` | `^0.184` | Types for above. |
 | `@react-three/fiber` | `^9` | React reconciler for three.js (detail viewer only). Requires React 19. |
 | `@react-three/drei` | `^10` | OrbitControls, Environment, helpers. Requires R3F v9. |
-| `react-virtuoso` | `^4` | Virtualized grid. |
+| `react-virtuoso` | `^4` | Virtualized **list** view only (`List.tsx`). The grid view uses `@tanstack/react-virtual` after a recurring main-thread `RangeError` deep inside `react-virtuoso`'s `urx` reactive graph froze the WebView; the grid's combination of large `data`, dynamic columns, and macOS-WebKit scroll triggered a publish/subscribe cycle we could not work around from the consumer side. |
+| `@tanstack/react-virtual` | `^3` | Virtualized grid (`Grid.tsx`). Plain function over scroll position + measurements, no pub/sub graph, so the recursion class above cannot occur. |
 | `zustand` | `^4` | State store. |
 | `tailwindcss` | `^3`, `autoprefixer`, `postcss` | Styling. |
 | `shadcn-ui` primitives via `@radix-ui/*` | latest | Menus, dialogs, slider, tooltip. |

@@ -128,6 +128,18 @@ function parseSubject(
   throw new Error(`unsupported extension: ${extension}`);
 }
 
+// Iterative tree walk. `Object3D.traverse` recurses, which overflows the
+// stack on pathological 3MF group nesting and crashes the worker.
+function walkIter(root: THREE.Object3D, visit: (node: THREE.Object3D) => void) {
+  const stack: THREE.Object3D[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as THREE.Object3D;
+    visit(node);
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) stack.push(children[i]);
+  }
+}
+
 // 3MF/OBJ may or may not carry materials. For the thumbnail we want a
 // uniform matte look regardless, so overwrite every mesh's material.
 function applyDefaultMaterial(root: THREE.Object3D) {
@@ -137,7 +149,7 @@ function applyDefaultMaterial(root: THREE.Object3D) {
     roughness: 0.65,
     flatShading: true,
   });
-  root.traverse((child) => {
+  walkIter(root, (child) => {
     const m = child as THREE.Mesh;
     if (m.isMesh) {
       const g = m.geometry as THREE.BufferGeometry;
@@ -148,7 +160,7 @@ function applyDefaultMaterial(root: THREE.Object3D) {
 }
 
 function disposeTree(root: THREE.Object3D) {
-  root.traverse((child) => {
+  walkIter(root, (child) => {
     const m = child as THREE.Mesh;
     if (m.isMesh) {
       (m.geometry as THREE.BufferGeometry).dispose();
@@ -157,6 +169,50 @@ function disposeTree(root: THREE.Object3D) {
       else if (mat) (mat as THREE.Material).dispose();
     }
   });
+}
+
+// Iterative parent-before-children matrix update. `Object3D.updateMatrixWorld`
+// recurses; deep 3MF graphs overflow the stack on it just like `traverse`.
+function updateMatrixWorldIter(root: THREE.Object3D) {
+  const stack: THREE.Object3D[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as THREE.Object3D;
+    node.updateMatrix();
+    if (node.parent) {
+      node.matrixWorld.multiplyMatrices(node.parent.matrixWorld, node.matrix);
+    } else {
+      node.matrixWorld.copy(node.matrix);
+    }
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) stack.push(children[i]);
+  }
+}
+
+// Iterative world-space bbox: walks the tree with a manual stack instead of
+// `Box3.setFromObject` / `Object3D.traverse`, both of which recurse and
+// overflow on deeply nested 3MF component graphs (a real-world freeze cause
+// in WKWebView Web Workers).
+function computeWorldBbox(root: THREE.Object3D, out: THREE.Box3): THREE.Box3 {
+  out.makeEmpty();
+  const childBox = new THREE.Box3();
+  const stack: THREE.Object3D[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as THREE.Object3D;
+    const mesh = node as THREE.Mesh;
+    if (mesh.isMesh) {
+      const geom = mesh.geometry as THREE.BufferGeometry | undefined;
+      if (geom) {
+        if (!geom.boundingBox) geom.computeBoundingBox();
+        if (geom.boundingBox) {
+          childBox.copy(geom.boundingBox).applyMatrix4(mesh.matrixWorld);
+          out.union(childBox);
+        }
+      }
+    }
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) stack.push(children[i]);
+  }
+  return out;
 }
 
 async function render(job: RenderJob): Promise<ArrayBuffer> {
@@ -173,34 +229,33 @@ async function render(job: RenderJob): Promise<ArrayBuffer> {
   const bytes = await response.arrayBuffer();
   const { obj, dispose } = parseSubject(bytes, job.extension);
 
-  // Compute world-space bbox across all descendant meshes. Works for single
-  // meshes (STL) and multi-part groups (OBJ, 3MF) alike.
+  // Add to scene inside try so any throw between here and the render still
+  // detaches `obj`. A previous bug leaked failed objects into the persistent
+  // worker scene on every crash, slowly destabilizing the renderer.
   s.add(obj);
-  obj.updateMatrixWorld(true);
-  const bbox = new THREE.Box3().setFromObject(obj);
-  if (bbox.isEmpty()) {
-    s.remove(obj);
-    dispose();
-    throw new Error("mesh contained no renderable geometry");
-  }
-  const center = new THREE.Vector3();
-  bbox.getCenter(center);
-  obj.position.sub(center);
-  obj.updateMatrixWorld(true);
-
-  // 3/4 view. Camera distance derived from bounding sphere so any mesh fits.
-  const sphere = new THREE.Sphere();
-  new THREE.Box3().setFromObject(obj).getBoundingSphere(sphere);
-  const radius = sphere.radius || 1;
-  const fov = (cam.fov * Math.PI) / 180;
-  const dist = (radius / Math.sin(fov / 2)) * 1.35;
-  cam.position.set(dist * 0.8, dist * 0.65, dist * 0.9);
-  cam.near = Math.max(0.01, dist / 1000);
-  cam.far = dist * 10;
-  cam.lookAt(0, 0, 0);
-  cam.updateProjectionMatrix();
-
   try {
+    updateMatrixWorldIter(obj);
+    const bbox = computeWorldBbox(obj, new THREE.Box3());
+    if (bbox.isEmpty()) {
+      throw new Error("mesh contained no renderable geometry");
+    }
+    const center = new THREE.Vector3();
+    bbox.getCenter(center);
+    obj.position.sub(center);
+    updateMatrixWorldIter(obj);
+
+    // 3/4 view. Camera distance derived from bounding sphere so any mesh fits.
+    const sphere = new THREE.Sphere();
+    computeWorldBbox(obj, new THREE.Box3()).getBoundingSphere(sphere);
+    const radius = sphere.radius || 1;
+    const fov = (cam.fov * Math.PI) / 180;
+    const dist = (radius / Math.sin(fov / 2)) * 1.35;
+    cam.position.set(dist * 0.8, dist * 0.65, dist * 0.9);
+    cam.near = Math.max(0.01, dist / 1000);
+    cam.far = dist * 10;
+    cam.lookAt(0, 0, 0);
+    cam.updateProjectionMatrix();
+
     r.render(s, cam);
     const blob = await (canvas as OffscreenCanvas).convertToBlob({
       type: "image/png",

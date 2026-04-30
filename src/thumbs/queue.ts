@@ -19,6 +19,7 @@ export interface RenderQueue {
   enqueue: (items: ThumbnailsNeededItem[]) => void;
   prioritize: (cacheKeys: string[]) => void;
   drop: (cacheKeys: string[]) => void;
+  hasFailed: (cacheKey: string) => boolean;
   dispose: () => void;
   // For diagnostics / tests.
   size: () => number;
@@ -72,6 +73,7 @@ export function createRenderQueue(): RenderQueue {
           }
         } else {
           console.warn("thumbnail render failed", msg.cacheKey, msg.message);
+          failedKeys.add(msg.cacheKey);
         }
         pump();
       },
@@ -89,6 +91,10 @@ export function createRenderQueue(): RenderQueue {
   // enqueue wins; a later `prioritize` bumps it ahead.
   const queue: QueueItem[] = [];
   const byKey = new Map<string, QueueItem>();
+  // Cache keys that failed to render this session. Without this, broken files
+  // (e.g. malformed 3MFs) get re-enqueued every time `availableKeys` mutates,
+  // and any worker crash on them recurs indefinitely.
+  const failedKeys = new Set<string>();
 
   function sort() {
     queue.sort((a, b) => b.priority - a.priority);
@@ -121,6 +127,7 @@ export function createRenderQueue(): RenderQueue {
     enqueue(items) {
       let added = false;
       for (const it of items) {
+        if (failedKeys.has(it.cacheKey)) continue;
         if (byKey.has(it.cacheKey)) continue;
         if (isCurrent(it.cacheKey)) continue;
         const entry: QueueItem = { ...it, priority: 0 };
@@ -129,6 +136,10 @@ export function createRenderQueue(): RenderQueue {
         added = true;
       }
       if (added) pump();
+    },
+
+    hasFailed(cacheKey) {
+      return failedKeys.has(cacheKey);
     },
 
     prioritize(cacheKeys) {
@@ -160,6 +171,7 @@ export function createRenderQueue(): RenderQueue {
       pool.length = 0;
       queue.length = 0;
       byKey.clear();
+      failedKeys.clear();
     },
 
     size: () => queue.length,
