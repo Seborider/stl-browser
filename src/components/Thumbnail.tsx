@@ -29,8 +29,7 @@ function ThumbnailInner({ file, className, compact = false }: Props) {
         <img
           src={src}
           alt=""
-          loading="lazy"
-          decoding="async"
+          decoding="sync"
           draggable={false}
           className="absolute inset-0 h-full w-full object-contain"
         />

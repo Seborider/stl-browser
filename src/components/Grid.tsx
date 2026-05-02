@@ -10,6 +10,7 @@ const TILE_MIN_PX: Record<GridSize, number> = {
   md: 140,
   lg: 200,
   xl: 280,
+  xxl: Number.POSITIVE_INFINITY,
 };
 
 // Approximate name-row + padding height added on top of the square tile.
@@ -18,7 +19,11 @@ const TILE_MIN_PX: Record<GridSize, number> = {
 const TILE_LABEL_PX = 23;
 const GRID_GAP_PX = 8;
 const GRID_PAD_PX = 12;
-const OVERSCAN_ROWS = 4;
+// Lower overscan = fewer GridTiles alive at once = fewer concurrent image
+// decodes during fast scroll. Correlated with WebContent renderer death
+// under sustained scroll across grid sizes.
+const OVERSCAN_ROWS = 2;
+const OVERSCAN_ROWS_XXL = 1;
 
 export interface GridHandle {
   scrollToIndex: (opts: { index: number; align?: "start" | "end" }) => void;
@@ -50,14 +55,17 @@ export function Grid({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useLayoutEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     setContainerWidth(el.clientWidth);
+    setContainerHeight(el.clientHeight);
     const obs = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setContainerWidth(entry.contentRect.width);
+        setContainerHeight(entry.contentRect.height);
       }
     });
     obs.observe(el);
@@ -83,14 +91,16 @@ export function Grid({
     return Math.max(0, (inner - totalGap) / columns);
   }, [containerWidth, columns]);
 
-  const rowHeight = Math.max(1, Math.round(tileWidth + TILE_LABEL_PX));
+  const rowHeight = gridSize === "xxl"
+    ? Math.max(1, containerHeight - GRID_PAD_PX * 2)
+    : Math.max(1, Math.round(tileWidth + TILE_LABEL_PX));
   const rowCount = Math.ceil(files.length / columns);
 
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => rowHeight + GRID_GAP_PX,
-    overscan: OVERSCAN_ROWS,
+    overscan: gridSize === "xxl" ? OVERSCAN_ROWS_XXL : OVERSCAN_ROWS,
   });
 
   // Re-measure when row height or column count changes.
@@ -163,12 +173,20 @@ export function Grid({
                 display: "grid",
                 gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
                 gap: `${GRID_GAP_PX}px`,
+                // Let WebKit fully skip painting + image decode for
+                // off-screen rows. Caps GPU/decode pressure during long
+                // scroll, which has been correlated with WebContent renderer
+                // death.
+                contentVisibility: "auto",
+                containIntrinsicSize: `0 ${rowHeight}px`,
+                ...(gridSize === "xxl" ? { height: rowHeight } : {}),
               }}
             >
               {rowFiles.map((file) => (
                 <GridTile
                   key={file.id}
                   file={file}
+                  gridSize={gridSize}
                   selected={file.id === selectedFileId}
                   onSelect={() => setSelectedFile(file.id)}
                   onActivate={() => onActivate(file.id)}

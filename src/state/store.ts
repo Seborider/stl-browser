@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import type { LightConfig, SortKey, SortDirection, ThemeMode } from "../generated";
 
 export type { LightConfig, SortKey, SortDirection, ThemeMode };
-export type GridSize = "sm" | "md" | "lg" | "xl";
+export type GridSize = "sm" | "md" | "lg" | "xl" | "xxl";
 export type ViewMode = "grid" | "list";
 
 // Mirrored verbatim by the inline bootstrap in index.html — keep them in sync.

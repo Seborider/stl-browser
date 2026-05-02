@@ -14,6 +14,7 @@
     "gridMd": "Mittel",
     "gridLg": "Groß",
     "gridXl": "XL",
+    "gridXxl": "XXL",
     "viewGrid": "Raster",
     "viewList": "Liste",
     "fileCount_one": "{{count}} Datei",

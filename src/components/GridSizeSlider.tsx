@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useAppStore, type GridSize } from "../state/store";
 
-const STEPS: GridSize[] = ["sm", "md", "lg", "xl"];
-const LABEL_KEYS: Record<GridSize, "toolbar.gridSm" | "toolbar.gridMd" | "toolbar.gridLg" | "toolbar.gridXl"> = {
+const STEPS: GridSize[] = ["sm", "md", "lg", "xl", "xxl"];
+const LABEL_KEYS: Record<GridSize, "toolbar.gridSm" | "toolbar.gridMd" | "toolbar.gridLg" | "toolbar.gridXl" | "toolbar.gridXxl"> = {
   sm: "toolbar.gridSm",
   md: "toolbar.gridMd",
   lg: "toolbar.gridLg",
   xl: "toolbar.gridXl",
+  xxl: "toolbar.gridXxl",
 };
 
 export function GridSizeSlider() {

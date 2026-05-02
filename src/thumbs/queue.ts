@@ -4,10 +4,14 @@ import { saveThumbnail } from "../ipc/commands";
 import type { RenderJob, RenderResult } from "./render-worker";
 
 // Pool of long-lived workers. Each owns its own OffscreenCanvas + WebGL
-// context, so N jobs run in parallel. 3 is a balance: enough parallelism
-// that a slow parser (e.g. 3MF's linkedom-based XML walk) doesn't stall
-// quick STLs behind it, without burning a context per hardware thread.
-const POOL_SIZE = 3;
+// context (~90 MB resident per context). In WKWebView, web workers run in
+// the SAME WebContent process as the main thread, so worker memory counts
+// against the renderer's macOS Jetsam cap. With 3 workers, ~270 MB stays
+// resident forever (long after the initial scan finishes), which has been
+// correlated with WebContent termination during sustained grid scroll.
+// Dropped to 1: serialises 3MF parsing behind STLs but caps sustained
+// worker memory at ~90 MB. Revisit if scan throughput becomes a concern.
+const POOL_SIZE = 1;
 
 interface PoolWorker {
   worker: Worker;
