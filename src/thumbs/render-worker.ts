@@ -221,8 +221,12 @@ async function render(job: RenderJob): Promise<ArrayBuffer> {
   const s = scene!;
   const cam = camera!;
 
-  // Fetch raw bytes via the asset:// protocol.
-  const response = await fetch(job.meshUrl);
+  // Fetch raw bytes via the asset:// protocol. `cache: "no-store"` is
+  // critical: without it, WKWebView retains every fetched response in its
+  // URL cache forever. With 100s of multi-MB mesh files that adds up to
+  // many GB of resident memory in the WebContent process — the dominant
+  // contributor to the renderer being killed during long sessions.
+  const response = await fetch(job.meshUrl, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`fetch ${job.meshUrl}: ${response.status}`);
   }

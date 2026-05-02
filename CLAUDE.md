@@ -49,6 +49,7 @@ See `PLAN.md` §1 for the full planned tree.
 - **SQLite:** migrations live in `src-tauri/src/db/migrations.rs`; apply on startup via schema_version.
 - **Thumbnail PNGs** live on disk at `<app_data>/thumbnails/<cache_key>.png`, indexed by the `thumbnails` table.
 - **Don't introduce placeholder TODOs or half-finished implementations.** If a phase isn't started, leave the code out entirely.
+- **`fetch(asset://...)` must pass `{ cache: "no-store" }`.** WKWebView retains every fetched response indefinitely in its URL cache. Without `no-store`, fetching N multi-MB mesh files leaks N × size into the WebContent process for the lifetime of the app; on a typical library this drives RSS past the macOS Jetsam cap and the renderer is killed silently — black window + unresponsive Cmd-Q + **no `.ips` crash report** (the diagnostic tell). Existing call sites: `src/thumbs/render-worker.ts`, `src/components/viewer/MeshLoader.tsx`.
 
 ## Verification
 

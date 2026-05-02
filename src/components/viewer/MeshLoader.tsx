@@ -73,7 +73,10 @@ export function MeshLoader({
     (async () => {
       try {
         const url = await getMeshAssetUrl(fileId);
-        const res = await fetch(url);
+        // `cache: "no-store"`: see render-worker.ts. WKWebView's URL cache
+        // would otherwise retain every opened mesh file (often tens of MB)
+        // in the WebContent process for the lifetime of the app.
+        const res = await fetch(url, { cache: "no-store" });
         if (!res.ok) throw new Error(`fetch ${url}: ${res.status}`);
         const bytes = await res.arrayBuffer();
         if (cancelled) return;
