@@ -154,6 +154,7 @@ pub fn run() {
             ipc::files::get_file_details,
             ipc::files::get_mesh_asset_url,
             ipc::files::rescan_library,
+            ipc::files::delete_file,
             ipc::thumbnails::save_thumbnail,
             ipc::thumbnails::get_thumbnail_cache_dir,
             ipc::thumbnails::list_thumbnail_keys,

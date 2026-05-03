@@ -5,6 +5,7 @@ import {
 } from "../ipc/commands";
 import {
   onFilesAdded,
+  onFilesRemoved,
   onMetadataReady,
   onThumbnailsNeeded,
   onThumbnailsReady,
@@ -18,6 +19,7 @@ import { disposeRenderQueue, renderQueue } from "../thumbs/queue";
 // for the app's lifetime.
 export function useLiveEvents(): void {
   const appendFiles = useFilesStore((s) => s.appendFiles);
+  const removeFiles = useFilesStore((s) => s.removeFiles);
   const setMetadata = useFilesStore((s) => s.setMetadata);
   const setCacheDir = useThumbsStore((s) => s.setCacheDir);
   const markAvailable = useThumbsStore((s) => s.markAvailable);
@@ -44,6 +46,10 @@ export function useLiveEvents(): void {
       if (!cancelled) appendFiles(e.files);
     }).then((u) => unsubs.push(u));
 
+    onFilesRemoved((e) => {
+      if (!cancelled) removeFiles(e.fileIds);
+    }).then((u) => unsubs.push(u));
+
     onMetadataReady((e) => {
       if (!cancelled) setMetadata(e.fileId, e.metadata);
     }).then((u) => unsubs.push(u));
@@ -63,5 +69,5 @@ export function useLiveEvents(): void {
       for (const u of unsubs) u();
       disposeRenderQueue();
     };
-  }, [appendFiles, setMetadata, setCacheDir, markAvailable]);
+  }, [appendFiles, removeFiles, setMetadata, setCacheDir, markAvailable]);
 }

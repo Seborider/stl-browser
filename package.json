@@ -13,6 +13,7 @@
     "prebuild": "pnpm bindings"
   },
   "dependencies": {
+    "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-popover": "^1.1.15",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.0",

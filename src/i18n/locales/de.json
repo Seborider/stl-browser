@@ -40,6 +40,10 @@
   "grid": {
     "empty": "Noch keine Dateien. Füge einen Bibliotheksordner hinzu, um loszulegen."
   },
+  "contextMenu": {
+    "revealInFinder": "Im Finder anzeigen",
+    "moveToTrash": "In den Papierkorb verschieben"
+  },
   "inspector": {
     "title": "Inspektor",
     "noFile": "Keine Datei ausgewählt",

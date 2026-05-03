@@ -4,6 +4,7 @@ use tauri::{AppHandle, State};
 
 use crate::db;
 use crate::error::IpcError;
+use crate::events;
 use crate::scan;
 use crate::state::AppState;
 use crate::types::{FileDetails, FileEntry, FileQuery};
@@ -56,5 +57,47 @@ pub fn rescan_library(
     id: i64,
 ) -> Result<(), IpcError> {
     scan::start_for_library(app, Arc::clone(state.inner()), id);
+    Ok(())
+}
+
+/// Move the file backing `id` to the macOS Trash, drop its DB row, and emit
+/// `files:removed` so the renderer drops the tile live. The watcher may also
+/// notice the disappearance and emit a second `files:removed` for the same id;
+/// both `delete_by_ids` and the renderer's `removeFiles` are idempotent so a
+/// double-emit is harmless.
+#[tauri::command]
+pub async fn delete_file(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+    id: i64,
+) -> Result<(), IpcError> {
+    let abs = {
+        let conn = state
+            .db
+            .lock()
+            .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+        db::files::abs_path_for(&conn, id)
+    };
+
+    match abs {
+        Ok(path) => {
+            trash::delete(&path)
+                .map_err(|e| IpcError::Io(format!("trash failed: {e}")))?;
+        }
+        // Race with the watcher: file is gone from disk and the DB row may
+        // already be deleted. Fall through so we still converge state.
+        Err(IpcError::NotFound(_)) => {}
+        Err(e) => return Err(e),
+    }
+
+    {
+        let conn = state
+            .db
+            .lock()
+            .map_err(|e| IpcError::Database(format!("db mutex poisoned: {e}")))?;
+        db::files::delete_by_ids(&conn, &[id])?;
+    }
+
+    events::files_removed(&app, vec![id]);
     Ok(())
 }

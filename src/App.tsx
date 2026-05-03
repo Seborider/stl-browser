@@ -113,6 +113,7 @@ function App() {
           ) : (
             <Grid
               files={files}
+              libraries={libraries}
               virtuosoRef={gridVirtuosoRef}
               onColumnsChange={setColumns}
               onRangeChanged={(r) => (visibleRangeRef.current = r)}

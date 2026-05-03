@@ -1,9 +1,10 @@
 import { useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { FileEntry } from "../generated";
+import type { FileEntry, Library } from "../generated";
 import { useAppStore, type GridSize } from "../state/store";
 import { GridTile } from "./GridTile";
+import { GridTileContextMenu } from "./GridTileContextMenu";
 
 const TILE_MIN_PX: Record<GridSize, number> = {
   sm: 96,
@@ -31,6 +32,7 @@ export interface GridHandle {
 
 interface Props {
   files: FileEntry[];
+  libraries: Library[];
   virtuosoRef: Ref<GridHandle | null>;
   onColumnsChange: (columns: number) => void;
   onRangeChanged: (range: { startIndex: number; endIndex: number }) => void;
@@ -44,6 +46,7 @@ interface Props {
 // of bug. We only virtualize rows; each row CSS-grids its visible items.
 export function Grid({
   files,
+  libraries,
   virtuosoRef,
   onColumnsChange,
   onRangeChanged,
@@ -52,6 +55,10 @@ export function Grid({
   const gridSize = useAppStore((s) => s.gridSize);
   const selectedFileId = useAppStore((s) => s.selectedFileId);
   const setSelectedFile = useAppStore((s) => s.setSelectedFile);
+  const librariesById = useMemo(
+    () => new Map(libraries.map((l) => [l.id, l])),
+    [libraries],
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -183,14 +190,20 @@ export function Grid({
               }}
             >
               {rowFiles.map((file) => (
-                <GridTile
+                <GridTileContextMenu
                   key={file.id}
                   file={file}
-                  gridSize={gridSize}
-                  selected={file.id === selectedFileId}
+                  library={librariesById.get(file.libraryId)}
                   onSelect={() => setSelectedFile(file.id)}
-                  onActivate={() => onActivate(file.id)}
-                />
+                >
+                  <GridTile
+                    file={file}
+                    gridSize={gridSize}
+                    selected={file.id === selectedFileId}
+                    onSelect={() => setSelectedFile(file.id)}
+                    onActivate={() => onActivate(file.id)}
+                  />
+                </GridTileContextMenu>
               ))}
             </div>
           );

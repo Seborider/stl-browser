@@ -1,6 +1,7 @@
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type {
   FilesAddedEvent,
+  FilesRemovedEvent,
   LanguageChangedEvent,
   MetadataReadyEvent,
   ScanCompletedEvent,
@@ -19,6 +20,7 @@ export const SCAN_PROGRESS = "scan:progress";
 export const SCAN_COMPLETED = "scan:completed";
 export const SCAN_ERROR = "scan:error";
 export const FILES_ADDED = "files:added";
+export const FILES_REMOVED = "files:removed";
 export const METADATA_READY = "metadata:ready";
 export const THUMBNAILS_NEEDED = "thumbnails:needed";
 export const THUMBNAILS_READY = "thumbnails:ready";
@@ -39,6 +41,9 @@ export function onScanError(cb: (e: ScanErrorEvent) => void): Promise<UnlistenFn
 }
 export function onFilesAdded(cb: (e: FilesAddedEvent) => void): Promise<UnlistenFn> {
   return listen<FilesAddedEvent>(FILES_ADDED, (ev) => cb(ev.payload));
+}
+export function onFilesRemoved(cb: (e: FilesRemovedEvent) => void): Promise<UnlistenFn> {
+  return listen<FilesRemovedEvent>(FILES_REMOVED, (ev) => cb(ev.payload));
 }
 export function onMetadataReady(cb: (e: MetadataReadyEvent) => void): Promise<UnlistenFn> {
   return listen<MetadataReadyEvent>(METADATA_READY, (ev) => cb(ev.payload));

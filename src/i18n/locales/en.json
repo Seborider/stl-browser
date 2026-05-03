@@ -40,6 +40,10 @@
   "grid": {
     "empty": "No files yet. Add a library folder to get started."
   },
+  "contextMenu": {
+    "revealInFinder": "Reveal in Finder",
+    "moveToTrash": "Move to Bin"
+  },
   "inspector": {
     "title": "Inspector",
     "noFile": "No file selected",

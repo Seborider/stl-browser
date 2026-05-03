@@ -75,6 +75,10 @@ export function revealInFinder(path: string): Promise<void> {
   return invoke<void>("reveal_in_finder", { path });
 }
 
+export function deleteFile(id: number): Promise<void> {
+  return invoke<void>("delete_file", { id });
+}
+
 export function getThemeMode(): Promise<ThemeMode> {
   return invoke<ThemeMode>("get_theme_mode");
 }

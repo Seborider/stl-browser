@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { FileEntry } from "../generated";
+import { deleteFile } from "../ipc/commands";
 import { useAppStore } from "../state/store";
 
 interface Params {
@@ -135,6 +136,15 @@ export function useKeyboardNav({
           if (currentIndex >= 0) {
             e.preventDefault();
             focusInspector();
+          }
+          break;
+        case "Delete":
+        case "Backspace":
+          if (selectedFileId !== null) {
+            e.preventDefault();
+            void deleteFile(selectedFileId).catch((err) => {
+              console.error("delete_file failed", err);
+            });
           }
           break;
       }
