@@ -28,7 +28,7 @@
     "empty": "Noch keine Bibliotheken. Klicke auf <span>+ Hinzufügen</span>, um einen Ordner auszuwählen.",
     "remove": "{{name}} entfernen",
     "confirmRemove": "„{{name}}\" aus STL Browser entfernen?\n\nDateien auf dem Datenträger bleiben unverändert.",
-    "footer": "Phase 7.5 · i18n"
+    "footer": "Build 0.1"
   },
   "list": {
     "name": "Name",

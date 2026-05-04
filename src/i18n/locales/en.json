@@ -28,7 +28,7 @@
     "empty": "No libraries yet. Click <span>+ Add</span> to pick a folder.",
     "remove": "Remove {{name}}",
     "confirmRemove": "Remove \"{{name}}\" from STL Browser?\n\nFiles on disk are not touched.",
-    "footer": "Phase 7.5 · i18n"
+    "footer": "Build 0.1"
   },
   "list": {
     "name": "Name",

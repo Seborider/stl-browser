@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>STL Browser needs access to preview 3D models in your Desktop.</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>STL Browser needs access to preview 3D models in your Documents.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>STL Browser needs access to preview 3D models in your Downloads.</string>
+  <key>NSRemovableVolumesUsageDescription</key>
+  <string>STL Browser needs access to preview 3D models on external drives.</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>© 2026 Sebastian Mayer</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>
